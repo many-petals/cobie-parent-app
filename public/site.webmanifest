@@ -1,0 +1,23 @@
+{
+  "name": "Many Petals - Calm Garden Moments",
+  "short_name": "Many Petals",
+  "description": "A calming emotional regulation app for children ages 3-7",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#86efac",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["education", "kids", "health"]
+}
