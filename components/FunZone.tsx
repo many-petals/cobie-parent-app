@@ -17,7 +17,7 @@ import {
   SceneDecoration
 } from './funZoneConfig';
 import { useFunZoneSounds, SoundEffect } from '../hooks/useFunZoneSounds';
-import { SavedBug, PlacedGardenItem } from '@/lib/gameProgressService';
+import { GardenPatch, SavedBug, PlacedGardenItem } from '@/lib/gameProgressService';
 
 
 interface FunZoneProps {
@@ -25,8 +25,10 @@ interface FunZoneProps {
   onEarnReward: (stickers: number, gardenItems: string[]) => void;
   earnedGardenItems: string[];
   placedGardenItems: PlacedGardenItem[];
+  gardenPatches: GardenPatch[];
   onPlaceGardenItem: (item: PlacedGardenItem) => void;
   onRemoveGardenItem: (index: number) => void;
+  onUpdateGardenPatches: (patches: GardenPatch[]) => void;
   // New props for persistent progress
   completedLevels: number[];
   onLevelComplete: (levelIndex: number) => void;
@@ -42,8 +44,10 @@ const FunZone: React.FC<FunZoneProps> = ({
   onEarnReward,
   earnedGardenItems,
   placedGardenItems,
+  gardenPatches,
   onPlaceGardenItem,
   onRemoveGardenItem,
+  onUpdateGardenPatches,
   completedLevels,
   onLevelComplete,
   savedBugs,
@@ -158,8 +162,13 @@ const FunZone: React.FC<FunZoneProps> = ({
           <StickerGarden
             earnedItems={earnedGardenItems}
             placedItems={placedGardenItems}
+            gardenPatches={gardenPatches}
             onPlaceItem={onPlaceGardenItem}
             onRemoveItem={onRemoveGardenItem}
+            onUpdateGardenPatches={onUpdateGardenPatches}
+            onHarvestItem={async (itemId) => {
+              await onEarnReward(0, [itemId]);
+            }}
             playSound={playSound}
           />
         )}
@@ -388,11 +397,128 @@ const FunZoneHome: React.FC<{
 const StickerGarden: React.FC<{
   earnedItems: string[];
   placedItems: { id: string; x: number; y: number }[];
+  gardenPatches: GardenPatch[];
   onPlaceItem: (item: { id: string; x: number; y: number }) => void;
   onRemoveItem: (index: number) => void;
-} & SoundProps> = ({ earnedItems, placedItems, onPlaceItem, onRemoveItem, playSound }) => {
+  onUpdateGardenPatches: (patches: GardenPatch[]) => void;
+  onHarvestItem: (itemId: string) => Promise<void>;
+} & SoundProps> = ({
+  earnedItems,
+  placedItems,
+  gardenPatches,
+  onPlaceItem,
+  onRemoveItem,
+  onUpdateGardenPatches,
+  onHarvestItem,
+  playSound,
+}) => {
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
+  const [selectedSeed, setSelectedSeed] = useState<string | null>(null);
   const gardenRef = useRef<HTMLDivElement>(null);
+
+  const seedOptions = [
+    {
+      id: 'bloom',
+      name: 'Bloom Seed',
+      emoji: '🌱',
+      description: 'Grows flowers and cheerful plants',
+      rewards: ['flower-red', 'flower-yellow', 'flower-pink', 'flower-purple', 'flower-tulip', 'flower-daisy', 'clover', 'mushroom'],
+    },
+    {
+      id: 'bug',
+      name: 'Bug Seed',
+      emoji: '🐛',
+      description: 'Attracts tiny bug and animal friends',
+      rewards: ['butterfly', 'bee', 'ladybug', 'snail', 'bird', 'frog', 'bunny'],
+    },
+    {
+      id: 'sky',
+      name: 'Sky Seed',
+      emoji: '⭐',
+      description: 'Makes bright sky and weather surprises',
+      rewards: ['rainbow', 'sun', 'cloud', 'star', 'moon'],
+    },
+  ] as const;
+
+  const selectRewardItem = (seedType: string) => {
+    const option = seedOptions.find((seed) => seed.id === seedType);
+    if (!option) return null;
+    return option.rewards[Math.floor(Math.random() * option.rewards.length)];
+  };
+
+  const updatePatchAt = async (index: number, patch: GardenPatch) => {
+    const nextPatches = gardenPatches.map((currentPatch, currentIndex) =>
+      currentIndex === index ? patch : currentPatch
+    );
+    await onUpdateGardenPatches(nextPatches);
+  };
+
+  const handlePatchTap = async (index: number) => {
+    const patch = gardenPatches[index];
+    if (!patch) return;
+
+    if (patch.stage === 'empty') {
+      if (!selectedSeed) return;
+      const rewardItemId = selectRewardItem(selectedSeed);
+      if (!rewardItemId) return;
+
+      playSound('seedPop');
+      await updatePatchAt(index, {
+        ...patch,
+        seedType: selectedSeed,
+        stage: 'seed',
+        waterCount: 0,
+        rewardItemId,
+      });
+      setSelectedSeed(null);
+      return;
+    }
+
+    if (patch.stage === 'seed') {
+      playSound('seedBounce');
+      await updatePatchAt(index, {
+        ...patch,
+        stage: 'sprout',
+        waterCount: 1,
+      });
+      return;
+    }
+
+    if (patch.stage === 'sprout') {
+      playSound('seedBounce');
+      await updatePatchAt(index, {
+        ...patch,
+        stage: 'ready',
+        waterCount: 2,
+      });
+      return;
+    }
+
+    if (patch.stage === 'ready' && patch.rewardItemId) {
+      playSound('reward');
+      await onHarvestItem(patch.rewardItemId);
+      await updatePatchAt(index, {
+        ...patch,
+        seedType: null,
+        stage: 'empty',
+        waterCount: 0,
+        rewardItemId: null,
+      });
+    }
+  };
+
+  const getPatchDisplay = (patch: GardenPatch) => {
+    if (patch.stage === 'empty') {
+      return { emoji: '🪴', label: selectedSeed ? 'Tap to plant' : 'Pick a seed', accent: 'text-amber-800' };
+    }
+    if (patch.stage === 'seed') {
+      return { emoji: '🌰', label: 'Water me', accent: 'text-amber-900' };
+    }
+    if (patch.stage === 'sprout') {
+      return { emoji: '🌱', label: 'Water again', accent: 'text-green-700' };
+    }
+    return { emoji: '🌸', label: 'Harvest surprise', accent: 'text-pink-700' };
+  };
 
   const handleGardenClick = (e: React.MouseEvent | React.TouchEvent) => {
     if (!selectedItem || !gardenRef.current) return;
@@ -420,6 +546,63 @@ const StickerGarden: React.FC<{
 
   return (
     <div className="space-y-4 max-w-lg mx-auto">
+      <div className="bg-white/90 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-lg">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div>
+            <h3 className="font-bold text-gray-800 text-sm sm:text-base">Grow Patch</h3>
+            <p className="text-gray-500 text-xs sm:text-sm">
+              Pick a seed, water it twice, then harvest a garden surprise.
+            </p>
+          </div>
+          <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-[10px] sm:text-xs font-semibold">
+            Cozy Loop
+          </span>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-3">
+          {gardenPatches.map((patch, index) => {
+            const display = getPatchDisplay(patch);
+            return (
+              <button
+                key={patch.id}
+                onClick={() => {
+                  void handlePatchTap(index);
+                }}
+                className="rounded-2xl bg-gradient-to-b from-amber-50 to-green-50 border border-amber-100 p-3 sm:p-4 text-center shadow-sm active:scale-[0.98] transition-transform"
+              >
+                <div className="text-3xl sm:text-4xl mb-2">{display.emoji}</div>
+                <p className={`font-semibold text-xs sm:text-sm ${display.accent}`}>{display.label}</p>
+                <p className="text-[10px] sm:text-xs text-gray-500 mt-1">
+                  Plot {index + 1}
+                </p>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          {seedOptions.map((seed) => (
+            <button
+              key={seed.id}
+              onClick={() => {
+                playSound('click');
+                setSelectedItem(null);
+                setSelectedSeed(selectedSeed === seed.id ? null : seed.id);
+              }}
+              className={`rounded-xl p-3 text-left transition-all ${
+                selectedSeed === seed.id
+                  ? 'bg-emerald-100 ring-2 ring-emerald-500'
+                  : 'bg-gray-50 hover:bg-gray-100'
+              }`}
+            >
+              <div className="text-2xl sm:text-3xl mb-1">{seed.emoji}</div>
+              <p className="font-semibold text-gray-800 text-xs sm:text-sm">{seed.name}</p>
+              <p className="text-[10px] sm:text-xs text-gray-500 mt-1">{seed.description}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Garden Area */}
       <div
         ref={gardenRef}

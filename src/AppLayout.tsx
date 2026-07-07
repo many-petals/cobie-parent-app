@@ -56,11 +56,13 @@ import {
   GameProgressData,
   SavedBug,
   PlacedGardenItem,
+  createDefaultGardenPatches,
   syncProgress,
   updateProgress,
   addCompletedLevel,
   addSavedBug,
   addEarnedGardenItems,
+  updateGardenPatches,
   updatePlacedGardenItems,
   addStickersEarned,
   setupSyncListeners,
@@ -161,6 +163,7 @@ const AppLayout: React.FC = () => {
     savedBugs: [],
     earnedGardenItems: [],
     placedGardenItems: [],
+    gardenPatches: createDefaultGardenPatches(),
     totalStickersEarned: 0,
     gamesPlayed: 0,
   });
@@ -919,6 +922,7 @@ const AppLayout: React.FC = () => {
         }}
         earnedGardenItems={gameProgress.earnedGardenItems || []}
         placedGardenItems={gameProgress.placedGardenItems || []}
+        gardenPatches={gameProgress.gardenPatches || createDefaultGardenPatches()}
         onPlaceGardenItem={async (item) => {
           const newPlaced = [...(gameProgress.placedGardenItems || []), item];
           const newProgress = await updatePlacedGardenItems(family?.id || null, newPlaced);
@@ -927,6 +931,10 @@ const AppLayout: React.FC = () => {
         onRemoveGardenItem={async (index) => {
           const newPlaced = (gameProgress.placedGardenItems || []).filter((_, i) => i !== index);
           const newProgress = await updatePlacedGardenItems(family?.id || null, newPlaced);
+          setGameProgress(newProgress);
+        }}
+        onUpdateGardenPatches={async (patches) => {
+          const newProgress = await updateGardenPatches(family?.id || null, patches);
           setGameProgress(newProgress);
         }}
         completedLevels={gameProgress.completedLevels || []}

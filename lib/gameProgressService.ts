@@ -18,6 +18,14 @@ export interface PlacedGardenItem {
   y: number;
 }
 
+export interface GardenPatch {
+  id: string;
+  seedType: string | null;
+  stage: 'empty' | 'seed' | 'sprout' | 'ready';
+  waterCount: number;
+  rewardItemId: string | null;
+}
+
 export interface GameProgressData {
   // Ladybird Launch
   completedLevels?: number[];
@@ -28,6 +36,7 @@ export interface GameProgressData {
   // Garden
   earnedGardenItems?: string[];
   placedGardenItems?: PlacedGardenItem[];
+  gardenPatches?: GardenPatch[];
   
   // General stats
   totalStickersEarned?: number;
@@ -49,6 +58,14 @@ export interface GameProgress {
 const LOCAL_STORAGE_KEY = 'funzone_progress';
 const PENDING_SYNC_KEY = 'funzone_pending_sync';
 
+export function createDefaultGardenPatches(): GardenPatch[] {
+  return [
+    { id: 'patch-1', seedType: null, stage: 'empty', waterCount: 0, rewardItemId: null },
+    { id: 'patch-2', seedType: null, stage: 'empty', waterCount: 0, rewardItemId: null },
+    { id: 'patch-3', seedType: null, stage: 'empty', waterCount: 0, rewardItemId: null },
+  ];
+}
+
 // Get local progress from localStorage
 export function getLocalProgress(): GameProgressData {
   try {
@@ -64,6 +81,7 @@ export function getLocalProgress(): GameProgressData {
     savedBugs: [],
     earnedGardenItems: [],
     placedGardenItems: [],
+    gardenPatches: createDefaultGardenPatches(),
     totalStickersEarned: 0,
     gamesPlayed: 0,
   };
@@ -194,6 +212,12 @@ export function mergeProgress(
     ? cloud.placedGardenItems
     : local.placedGardenItems || [];
 
+  const gardenPatches = (cloud.gardenPatches && cloud.gardenPatches.length > 0)
+    ? cloud.gardenPatches
+    : local.gardenPatches && local.gardenPatches.length > 0
+      ? local.gardenPatches
+      : createDefaultGardenPatches();
+
   // Take the max of stats
   const totalStickersEarned = Math.max(
     local.totalStickersEarned || 0,
@@ -214,6 +238,7 @@ export function mergeProgress(
     savedBugs,
     earnedGardenItems,
     placedGardenItems,
+    gardenPatches,
     totalStickersEarned,
     gamesPlayed,
     lastPlayedAt,
@@ -342,6 +367,13 @@ export async function updatePlacedGardenItems(
   items: PlacedGardenItem[]
 ): Promise<GameProgressData> {
   return updateProgress(familyId, { placedGardenItems: items });
+}
+
+export async function updateGardenPatches(
+  familyId: string | null,
+  patches: GardenPatch[]
+): Promise<GameProgressData> {
+  return updateProgress(familyId, { gardenPatches: patches });
 }
 
 // Add stickers earned
