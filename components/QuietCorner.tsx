@@ -21,7 +21,7 @@ const timerOptions: { value: TimerOption; label: string }[] = [
 
 const scenes: { id: SceneType; name: string; icon: React.ReactNode; bgClass: string; defaultSound: string }[] = [
   { id: 'day', name: 'Sunny Day', icon: <Sun className="w-5 h-5" />, bgClass: 'from-sky-300 via-sky-200 to-green-200', defaultSound: 'forest-birds' },
-  { id: 'night', name: 'Starry Night', icon: <Moon className="w-5 h-5" />, bgClass: 'from-indigo-900 via-purple-900 to-slate-900', defaultSound: 'night-crickets' },
+  { id: 'night', name: 'Starry Night', icon: <Moon className="w-5 h-5" />, bgClass: 'from-indigo-900 via-purple-900 to-slate-900', defaultSound: 'music-dreamy' },
   { id: 'forest', name: 'Peaceful Forest', icon: <Leaf className="w-5 h-5" />, bgClass: 'from-green-600 via-green-500 to-emerald-400', defaultSound: 'wind-trees' },
   { id: 'ocean', name: 'Calm Ocean', icon: <Waves className="w-5 h-5" />, bgClass: 'from-cyan-500 via-blue-500 to-blue-700', defaultSound: 'ocean-waves' },
 ];

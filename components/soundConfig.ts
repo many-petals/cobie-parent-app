@@ -7,8 +7,6 @@ export interface Sound {
   category: 'nature' | 'music' | 'whitenoise';
   icon: string; // Emoji or icon identifier
   description: string;
-  // Using free ambient sound URLs from freesound.org and similar sources
-  // In production, these would be hosted on your own CDN
   audioUrl: string;
   defaultVolume: number; // 0-1
 }
@@ -31,7 +29,7 @@ export const soundLibrary: Sound[] = [
     category: 'nature',
     icon: 'rain',
     description: 'Soft rain on leaves',
-    audioUrl: 'https://assets.mixkit.co/active_storage/sfx/212/212-preview.mp3',
+    audioUrl: '/sounds/quiet-corner/rain-gentle.wav',
     defaultVolume: 0.4,
   },
   {
@@ -40,7 +38,7 @@ export const soundLibrary: Sound[] = [
     category: 'nature',
     icon: 'waves',
     description: 'Gentle beach waves',
-    audioUrl: 'https://assets.mixkit.co/active_storage/sfx/2432/2432-preview.mp3',
+    audioUrl: '/sounds/quiet-corner/ocean-waves.wav',
     defaultVolume: 0.35,
   },
   {
@@ -48,8 +46,8 @@ export const soundLibrary: Sound[] = [
     name: 'Forest Birds',
     category: 'nature',
     icon: 'forest',
-    description: 'Birdsong in the trees',
-    audioUrl: 'https://assets.mixkit.co/active_storage/sfx/2433/2433-preview.mp3',
+    description: 'Soft birds and a breezy garden morning',
+    audioUrl: '/sounds/quiet-corner/forest-birds.wav',
     defaultVolume: 0.3,
   },
   {
@@ -58,7 +56,7 @@ export const soundLibrary: Sound[] = [
     category: 'nature',
     icon: 'stream',
     description: 'Water over smooth rocks',
-    audioUrl: 'https://assets.mixkit.co/active_storage/sfx/2515/2515-preview.mp3',
+    audioUrl: '/sounds/quiet-corner/stream-water.wav',
     defaultVolume: 0.35,
   },
   {
@@ -67,7 +65,7 @@ export const soundLibrary: Sound[] = [
     category: 'nature',
     icon: 'wind',
     description: 'Breezy leaves overhead',
-    audioUrl: 'https://assets.mixkit.co/active_storage/sfx/2434/2434-preview.mp3',
+    audioUrl: '/sounds/quiet-corner/wind-trees.wav',
     defaultVolume: 0.3,
   },
   {
@@ -75,9 +73,9 @@ export const soundLibrary: Sound[] = [
     name: 'Night Crickets',
     category: 'nature',
     icon: 'night',
-    description: 'Crickets after sunset',
-    audioUrl: 'https://assets.mixkit.co/active_storage/sfx/2436/2436-preview.mp3',
-    defaultVolume: 0.25,
+    description: 'Gentle nighttime chirps with soft evening air',
+    audioUrl: '/sounds/quiet-corner/night-crickets.wav',
+    defaultVolume: 0.22,
   },
   
   // Gentle Music
@@ -87,7 +85,7 @@ export const soundLibrary: Sound[] = [
     category: 'music',
     icon: 'music',
     description: 'Gentle lullaby melody',
-    audioUrl: 'https://assets.mixkit.co/active_storage/sfx/2437/2437-preview.mp3',
+    audioUrl: '/sounds/quiet-corner/music-lullaby.wav',
     defaultVolume: 0.3,
   },
   {
@@ -96,7 +94,7 @@ export const soundLibrary: Sound[] = [
     category: 'music',
     icon: 'piano',
     description: 'Soft piano notes',
-    audioUrl: 'https://assets.mixkit.co/active_storage/sfx/2438/2438-preview.mp3',
+    audioUrl: '/sounds/quiet-corner/music-peaceful.wav',
     defaultVolume: 0.3,
   },
   {
@@ -104,8 +102,8 @@ export const soundLibrary: Sound[] = [
     name: 'Dreamy Melody',
     category: 'music',
     icon: 'stars',
-    description: 'Dreamy floating melody',
-    audioUrl: 'https://assets.mixkit.co/active_storage/sfx/2439/2439-preview.mp3',
+    description: 'Slow floating notes for a starry sky',
+    audioUrl: '/sounds/quiet-corner/music-dreamy.wav',
     defaultVolume: 0.25,
   },
   
@@ -116,7 +114,7 @@ export const soundLibrary: Sound[] = [
     category: 'whitenoise',
     icon: 'noise',
     description: 'Smooth steady hiss',
-    audioUrl: 'https://assets.mixkit.co/active_storage/sfx/2440/2440-preview.mp3',
+    audioUrl: '/sounds/quiet-corner/whitenoise-soft.wav',
     defaultVolume: 0.2,
   },
   {
@@ -125,7 +123,7 @@ export const soundLibrary: Sound[] = [
     category: 'whitenoise',
     icon: 'pink',
     description: 'Softer warm noise',
-    audioUrl: 'https://assets.mixkit.co/active_storage/sfx/2441/2441-preview.mp3',
+    audioUrl: '/sounds/quiet-corner/whitenoise-pink.wav',
     defaultVolume: 0.2,
   },
   {
@@ -134,7 +132,7 @@ export const soundLibrary: Sound[] = [
     category: 'whitenoise',
     icon: 'fan',
     description: 'Gentle fan hum',
-    audioUrl: 'https://assets.mixkit.co/active_storage/sfx/2442/2442-preview.mp3',
+    audioUrl: '/sounds/quiet-corner/whitenoise-fan.wav',
     defaultVolume: 0.25,
   },
 ];
