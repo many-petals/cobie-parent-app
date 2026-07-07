@@ -20,8 +20,8 @@ export interface GameConfig {
 export const gameConfigs: GameConfig[] = [
   {
     id: 'hide-seek',
-    name: 'Garden Hide & Seek',
-    description: 'Find hidden friends in the garden!',
+    name: 'Garden Treasure Hunt',
+    description: 'Find hidden friends and little surprises!',
     icon: '🔍',
     color: 'bg-green-500',
     bgGradient: 'from-green-400 to-emerald-500',
@@ -31,8 +31,8 @@ export const gameConfigs: GameConfig[] = [
   },
   {
     id: 'seed-sort',
-    name: 'Seed Sorting',
-    description: 'Sort colorful seeds into bins!',
+    name: 'Rainbow Seed Scoop',
+    description: 'Scoop seeds into the right color pots!',
     icon: '🌱',
     color: 'bg-amber-500',
     bgGradient: 'from-amber-400 to-orange-500',
@@ -42,8 +42,8 @@ export const gameConfigs: GameConfig[] = [
   },
   {
     id: 'memory-match',
-    name: 'Memory Match',
-    description: 'Match garden friend pairs!',
+    name: 'Friend Flip Cards',
+    description: 'Flip cards and find matching garden pals!',
     icon: '🃏',
     color: 'bg-purple-500',
     bgGradient: 'from-purple-400 to-pink-500',
@@ -53,8 +53,8 @@ export const gameConfigs: GameConfig[] = [
   },
   {
     id: 'bug-builder',
-    name: 'Bug Builder',
-    description: 'Create your own cute bugs!',
+    name: 'Bug Friends Studio',
+    description: 'Make, save, and show your bug friends!',
     icon: '🐛',
     color: 'bg-pink-500',
     bgGradient: 'from-pink-400 to-rose-500',
@@ -64,8 +64,8 @@ export const gameConfigs: GameConfig[] = [
   },
   {
     id: 'ladybird-launch',
-    name: 'Ladybird Launch',
-    description: 'Help ladybird reach the leaves!',
+    name: 'Ladybird Adventure',
+    description: 'Bounce to stars, leaves, and safe landings!',
     icon: '🐞',
     color: 'bg-red-500',
     bgGradient: 'from-red-400 to-orange-500',

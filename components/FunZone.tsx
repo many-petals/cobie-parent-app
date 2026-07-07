@@ -147,6 +147,10 @@ const FunZone: React.FC<FunZoneProps> = ({
             onSelectGame={handleScreenChange} 
             onOpenGarden={() => handleScreenChange('garden')}
             playSound={playSound}
+            gardenItemCount={earnedGardenItems.length}
+            placedItemCount={placedGardenItems.length}
+            savedBugCount={savedBugs.length}
+            completedFlightCount={completedLevels.length}
           />
         )}
         
@@ -216,50 +220,166 @@ interface SoundProps {
 }
 
 // Fun Zone Home Screen
-const FunZoneHome: React.FC<{ onSelectGame: (game: GameScreen) => void; onOpenGarden: () => void } & SoundProps> = ({ 
-  onSelectGame, 
+const FunZoneHome: React.FC<{
+  onSelectGame: (game: GameScreen) => void;
+  onOpenGarden: () => void;
+  gardenItemCount: number;
+  placedItemCount: number;
+  savedBugCount: number;
+  completedFlightCount: number;
+} & SoundProps> = ({
+  onSelectGame,
   onOpenGarden,
-  playSound 
+  playSound,
+  gardenItemCount,
+  placedItemCount,
+  savedBugCount,
+  completedFlightCount,
 }) => {
+  const sideGames = gameConfigs.filter((game) =>
+    ["seed-sort", "memory-match", "ladybird-launch"].includes(game.id)
+  );
+  const treasureHunt = gameConfigs.find((game) => game.id === "hide-seek");
+
   return (
     <div className="space-y-4 sm:space-y-6 max-w-lg mx-auto">
-      {/* Garden Button */}
+      <div className="text-center px-2">
+        <p className="text-white/90 text-sm sm:text-base font-semibold drop-shadow">
+          Play, collect, and make your own little garden world
+        </p>
+        <p className="text-white/75 text-xs sm:text-sm mt-1">
+          Best for ages 3-7: caring, creating, treasure hunts, and silly surprises
+        </p>
+      </div>
+
       <button
         onClick={() => {
           playSound('click');
           onOpenGarden();
         }}
-        className="w-full bg-gradient-to-r from-green-400 to-emerald-500 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl active:scale-[0.98] transition-transform"
+        className="w-full bg-gradient-to-r from-green-400 via-emerald-500 to-teal-500 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl active:scale-[0.98] transition-transform"
       >
-        <div className="flex items-center gap-3 sm:gap-4">
-          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/30 rounded-xl sm:rounded-2xl flex items-center justify-center">
+        <div className="flex items-start gap-3 sm:gap-4">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/25 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0">
             <Flower2 className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
           </div>
           <div className="text-left flex-1">
-            <h3 className="text-lg sm:text-xl font-bold text-white">My Garden</h3>
-            <p className="text-white/80 text-xs sm:text-sm">Place your stickers & items!</p>
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="text-lg sm:text-xl font-bold text-white">My Garden</h3>
+              <span className="px-2 py-0.5 rounded-full bg-white/20 text-[10px] sm:text-xs font-semibold text-white">
+                Main World
+              </span>
+            </div>
+            <p className="text-white/85 text-xs sm:text-sm">
+              Grow your world, place surprises, and make it yours.
+            </p>
+            <div className="flex flex-wrap gap-2 mt-3 text-[10px] sm:text-xs text-white/90">
+              <span className="px-2 py-1 rounded-full bg-white/15">
+                {gardenItemCount} items earned
+              </span>
+              <span className="px-2 py-1 rounded-full bg-white/15">
+                {placedItemCount} items placed
+              </span>
+            </div>
           </div>
-          <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-300" />
+          <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-300 shrink-0" />
         </div>
       </button>
 
-      {/* Game Grid */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4">
-        {gameConfigs.map((game) => (
+      <button
+        onClick={() => {
+          playSound('click');
+          onSelectGame('bug-builder');
+        }}
+        className="w-full bg-gradient-to-r from-pink-400 via-rose-400 to-orange-400 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl active:scale-[0.98] transition-transform"
+      >
+        <div className="flex items-start gap-3 sm:gap-4">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/25 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0">
+            <Palette className="w-7 h-7 sm:w-9 sm:h-9 text-white" />
+          </div>
+          <div className="text-left flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="text-lg sm:text-xl font-bold text-white">Bug Friends Studio</h3>
+              <span className="px-2 py-0.5 rounded-full bg-white/20 text-[10px] sm:text-xs font-semibold text-white">
+                Featured
+              </span>
+            </div>
+            <p className="text-white/85 text-xs sm:text-sm">
+              Make bug friends, save your favorites, and build your own collection.
+            </p>
+            <div className="flex flex-wrap gap-2 mt-3 text-[10px] sm:text-xs text-white/90">
+              <span className="px-2 py-1 rounded-full bg-white/15">
+                {savedBugCount} bugs saved
+              </span>
+              <span className="px-2 py-1 rounded-full bg-white/15">
+                Dress up and remix
+              </span>
+            </div>
+          </div>
+        </div>
+      </button>
+
+      {treasureHunt && (
+        <section className="space-y-3">
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-white font-bold text-base sm:text-lg drop-shadow">Treasure Hunt</h2>
+            <span className="text-white/70 text-xs">Explore scenes and spot surprises</span>
+          </div>
+
           <button
-            key={game.id}
             onClick={() => {
               playSound('click');
-              onSelectGame(game.id as GameScreen);
+              onSelectGame(treasureHunt.id as GameScreen);
             }}
-            className={`bg-gradient-to-br ${game.bgGradient} rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xl active:scale-95 transition-transform`}
+            className={`w-full bg-gradient-to-br ${treasureHunt.bgGradient} rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xl active:scale-95 transition-transform`}
           >
-            <div className="text-4xl sm:text-5xl mb-2 sm:mb-3">{game.icon}</div>
-            <h3 className="text-base sm:text-lg font-bold text-white mb-0.5 sm:mb-1">{game.name}</h3>
-            <p className="text-white/80 text-[10px] sm:text-xs">{game.description}</p>
+            <div className="flex items-start gap-3">
+              <div className="text-4xl sm:text-5xl">{treasureHunt.icon}</div>
+              <div className="text-left flex-1">
+                <h3 className="text-base sm:text-lg font-bold text-white mb-1">{treasureHunt.name}</h3>
+                <p className="text-white/85 text-xs sm:text-sm">{treasureHunt.description}</p>
+                <p className="text-white/70 text-[10px] sm:text-xs mt-2">
+                  Best for repeat play because every scene feels like a tiny story search.
+                </p>
+              </div>
+            </div>
           </button>
-        ))}
-      </div>
+        </section>
+      )}
+
+      <section className="space-y-3">
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-white font-bold text-base sm:text-lg drop-shadow">Quick Play Corner</h2>
+          <span className="text-white/70 text-xs">{completedFlightCount} flight levels finished</span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+          {sideGames.map((game) => (
+            <button
+              key={game.id}
+              onClick={() => {
+                playSound('click');
+                onSelectGame(game.id as GameScreen);
+              }}
+              className={`bg-gradient-to-br ${game.bgGradient} rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xl active:scale-95 transition-transform`}
+            >
+              <div className="text-4xl sm:text-5xl mb-2 sm:mb-3">{game.icon}</div>
+              <h3 className="text-base sm:text-lg font-bold text-white mb-0.5 sm:mb-1">{game.name}</h3>
+              <p className="text-white/80 text-[10px] sm:text-xs">{game.description}</p>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="rounded-2xl sm:rounded-3xl bg-white/15 backdrop-blur-sm p-4 sm:p-5 text-white shadow-lg">
+        <div className="flex items-center gap-2 mb-2">
+          <BookOpen className="w-5 h-5 text-yellow-200" />
+          <h2 className="font-bold text-base sm:text-lg">What to build next</h2>
+        </div>
+        <p className="text-white/85 text-sm">
+          The biggest future win is a real grow-and-care loop in My Garden: plant, water, hatch, collect, and decorate.
+        </p>
+      </section>
     </div>
   );
 };
