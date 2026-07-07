@@ -31,6 +31,26 @@ export function useBackgroundSound({ settings }: UseBackgroundSoundOptions) {
     }
   }, []);
 
+  const ensureAudio = useCallback(() => {
+    if (audioRef.current) {
+      return audioRef.current;
+    }
+
+    const audio = new Audio();
+    audio.loop = true;
+    audio.preload = "auto";
+
+    audio.addEventListener("play", () => setIsPlaying(true));
+    audio.addEventListener("playing", () => setIsPlaying(true));
+    audio.addEventListener("pause", () => setIsPlaying(false));
+    audio.addEventListener("ended", () => setIsPlaying(false));
+    audio.addEventListener("emptied", () => setIsPlaying(false));
+    audio.addEventListener("error", () => setIsPlaying(false));
+
+    audioRef.current = audio;
+    return audio;
+  }, []);
+
   const syncVolume = useCallback(
     (nextVolume: number) => {
       const audio = audioRef.current;
@@ -50,10 +70,18 @@ export function useBackgroundSound({ settings }: UseBackgroundSoundOptions) {
     lastVolumeRef.current = settings.volume;
   }, [settings.volume]);
 
+  useEffect(() => {
+    if (!settings.enabled) {
+      audioRef.current?.pause();
+      setIsPlaying(false);
+    }
+  }, [settings.enabled]);
+
   useEffect(
     () => () => {
       clearFade();
-      audioRef.current?.pause();
+      const audio = audioRef.current;
+      audio?.pause();
       audioRef.current = null;
     },
     [clearFade]
@@ -71,15 +99,15 @@ export function useBackgroundSound({ settings }: UseBackgroundSoundOptions) {
       }
 
       clearFade();
+      setCurrentSound(sound);
 
-      if (!audioRef.current) {
-        audioRef.current = new Audio();
-        audioRef.current.loop = true;
-      }
-
-      const audio = audioRef.current;
-      if (audio.src !== sound.audioUrl) {
+      const audio = ensureAudio();
+      const needsSourceUpdate = audio.src !== sound.audioUrl;
+      if (needsSourceUpdate) {
+        audio.pause();
+        audio.currentTime = 0;
         audio.src = sound.audioUrl;
+        audio.load();
       }
 
       const nextVolume = isMuted ? 0 : clamp(volume || sound.defaultVolume, 0, 1);
@@ -87,15 +115,12 @@ export function useBackgroundSound({ settings }: UseBackgroundSoundOptions) {
 
       try {
         await audio.play();
-        setCurrentSound(sound);
-        setIsPlaying(true);
       } catch (error) {
         console.error("Failed to play audio:", error);
-        setCurrentSound(sound);
         setIsPlaying(false);
       }
     },
-    [clearFade, isMuted, settings.enabled, volume]
+    [clearFade, ensureAudio, isMuted, settings.enabled, volume]
   );
 
   const stop = useCallback(() => {
@@ -125,13 +150,13 @@ export function useBackgroundSound({ settings }: UseBackgroundSoundOptions) {
     }
 
     try {
+      audioRef.current.volume = isMuted ? 0 : clamp(volume || currentSound.defaultVolume, 0, 1);
       await audioRef.current.play();
-      setIsPlaying(true);
     } catch (error) {
       console.error("Failed to play audio:", error);
       setIsPlaying(false);
     }
-  }, [currentSound, settings.enabled]);
+  }, [currentSound, isMuted, settings.enabled, volume]);
 
   const setVolume = useCallback(
     (nextVolume: number) => {
