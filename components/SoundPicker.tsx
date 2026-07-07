@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Volume2, VolumeX, Pause, Play, X, Music, Leaf, Waves } from 'lucide-react';
 import { Sound, getApprovedSounds, categoryInfo } from './soundConfig';
 
@@ -32,13 +32,19 @@ const SoundIcon: React.FC<{ icon: string; className?: string }> = ({ icon, class
     case 'forest':
       return (
         <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M12 22v-7M9 22h6M12 15l-4-6h8l-4 6zM12 9l-3-5h6l-3 5z" />
+          <path d="M7 19c1.2-4.8 4-7 8.5-7 1.7 0 3.2.3 4.5 1" strokeLinecap="round" />
+          <path d="M6 14c1.6-1.8 3.8-2.9 6.6-3.2" strokeLinecap="round" />
+          <path d="M10 9c.7-2.3 2.3-4 4.8-5" strokeLinecap="round" />
+          <path d="M14.5 10.5c1.9-.8 3.8-.8 5.5 0-1 2.5-2.8 4-5.5 4.5" />
+          <path d="M9 13c-2.2.2-4 1.2-5 3.2 2.4.9 4.5.5 6.2-1.2" />
         </svg>
       );
     case 'stream':
       return (
         <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M2 12c2-2 4-2 6 0s4 2 6 0 4-2 6 0M2 17c2-2 4-2 6 0s4 2 6 0 4-2 6 0M2 7c2-2 4-2 6 0s4 2 6 0 4-2 6 0" />
+          <path d="M8.5 4.5c0 2.2-2.3 3.2-2.3 5.2a2.3 2.3 0 0 0 4.6 0c0-2-2.3-3-2.3-5.2z" />
+          <path d="M4 15c1.7-1 3.3-1 5 0s3.3 1 5 0 3.3-1 5 0" strokeLinecap="round" />
+          <path d="M4 19c1.7-1 3.3-1 5 0s3.3 1 5 0 3.3-1 5 0" strokeLinecap="round" />
         </svg>
       );
     case 'wind':
@@ -113,6 +119,11 @@ const SoundPicker: React.FC<SoundPickerProps> = ({
   const approvedSounds = getApprovedSounds(approvedSoundIds);
   const currentSound = approvedSounds.find(s => s.id === currentSoundId);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    setActiveCategory(currentSound?.category ?? 'all');
+  }, [currentSound?.category, isOpen]);
+
   const filteredSounds = activeCategory === 'all' 
     ? approvedSounds 
     : approvedSounds.filter(s => s.category === activeCategory);
@@ -138,6 +149,7 @@ const SoundPicker: React.FC<SoundPickerProps> = ({
           <button
             onClick={onClose}
             className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+            aria-label="Close calming sounds"
           >
             <X className="w-5 h-5 text-gray-500" />
           </button>
@@ -160,12 +172,14 @@ const SoundPicker: React.FC<SoundPickerProps> = ({
                 <button
                   onClick={onTogglePlay}
                   className={`w-10 h-10 rounded-full ${colorClass} flex items-center justify-center text-white shadow-md hover:scale-105 transition-transform`}
+                  aria-label={isPlaying ? 'Pause current sound' : 'Play current sound'}
                 >
                   {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
                 </button>
                 <button
                   onClick={onStop}
                   className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-300 transition-colors"
+                  aria-label="Stop current sound"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -177,6 +191,7 @@ const SoundPicker: React.FC<SoundPickerProps> = ({
               <button
                 onClick={onToggleMute}
                 className="p-2 rounded-lg hover:bg-white/50 transition-colors"
+                aria-label={isMuted ? 'Unmute calming sound' : 'Mute calming sound'}
               >
                 {isMuted ? (
                   <VolumeX className="w-5 h-5 text-gray-600" />
@@ -190,6 +205,7 @@ const SoundPicker: React.FC<SoundPickerProps> = ({
                 max="100"
                 value={isMuted ? 0 : volume * 100}
                 onChange={(e) => onVolumeChange(parseInt(e.target.value) / 100)}
+                aria-label="Calming sound volume"
                 className="flex-1 h-2 rounded-full appearance-none bg-gray-300 cursor-pointer"
                 style={{
                   background: `linear-gradient(to right, currentColor ${isMuted ? 0 : volume * 100}%, #d1d5db ${isMuted ? 0 : volume * 100}%)`,
@@ -226,6 +242,7 @@ const SoundPicker: React.FC<SoundPickerProps> = ({
               <button
                 key={sound.id}
                 onClick={() => onSelectSound(sound.id)}
+                aria-label={`${sound.name}. ${sound.description}`}
                 className={`p-4 rounded-2xl text-left transition-all ${
                   currentSoundId === sound.id
                     ? `${colorClass} text-white shadow-lg scale-[1.02]`
@@ -246,7 +263,7 @@ const SoundPicker: React.FC<SoundPickerProps> = ({
                 <p className={`text-xs mt-0.5 ${
                   currentSoundId === sound.id ? 'text-white/70' : 'text-gray-400'
                 }`}>
-                  {categoryInfo[sound.category].name}
+                  {sound.description}
                 </p>
               </button>
             ))}
