@@ -250,17 +250,89 @@ const FunZoneHome: React.FC<{
     ["seed-sort", "memory-match", "ladybird-launch"].includes(game.id)
   );
   const treasureHunt = gameConfigs.find((game) => game.id === "hide-seek");
+  const storyPromptOptions = [
+    {
+      title: 'Tea Party in the Tulips',
+      prompt: 'Set up a tiny garden tea party and make sure every bug friend gets a special seat.',
+      emoji: '🫖',
+      accent: 'from-rose-400 to-orange-300',
+    },
+    {
+      title: 'Sleepy Bee Bedtime',
+      prompt: 'Find a soft cloud, a cozy flower, and a calm spot for a sleepy bee to rest.',
+      emoji: '💤',
+      accent: 'from-sky-400 to-cyan-300',
+    },
+    {
+      title: 'Petal Parade',
+      prompt: 'Make a silly bug band, grow bright flowers, and lead a happy parade across the garden.',
+      emoji: '🎺',
+      accent: 'from-fuchsia-400 to-pink-300',
+    },
+    {
+      title: 'Rainy Day Rescue',
+      prompt: 'Help tiny garden friends find a rainbow, a puddle, and a cheerful place to play.',
+      emoji: '🌦️',
+      accent: 'from-emerald-400 to-teal-300',
+    },
+  ] as const;
+  const featuredPrompt = storyPromptOptions[new Date().getDate() % storyPromptOptions.length];
+  const playStyles = [
+    { label: 'Pretend play', value: 'Tiny worlds and little stories', emoji: '🌼' },
+    { label: 'Dress-up fun', value: 'Silly bug looks and remixes', emoji: '🎀' },
+    { label: 'Gentle surprises', value: 'Collect, grow, and discover', emoji: '✨' },
+  ];
+  const pretendPlayIdeas = [
+    `${savedBugCount > 0 ? 'Invite your saved bug friends' : 'Make a new bug friend'} to a garden picnic.`,
+    `Hide a ${gardenItemCount > 0 ? 'special treasure' : 'shiny surprise'} and go looking together.`,
+    'Pretend the ladybird trail is a delivery trip for flowers and stars.',
+  ];
 
   return (
     <div className="space-y-4 sm:space-y-6 max-w-lg mx-auto">
-      <div className="text-center px-2">
-        <p className="text-white/90 text-sm sm:text-base font-semibold drop-shadow">
-          Play, collect, and make your own little garden world
-        </p>
-        <p className="text-white/75 text-xs sm:text-sm mt-1">
-          Best for ages 3-7: caring, creating, treasure hunts, and silly surprises
-        </p>
-      </div>
+      <section className="rounded-3xl bg-white/18 backdrop-blur-sm p-4 sm:p-5 text-white shadow-xl">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-white/75 text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em]">
+              Petal Playtime
+            </p>
+            <h2 className="text-xl sm:text-2xl font-bold mt-1 drop-shadow">
+              Tiny worlds, silly friends, gentle fun
+            </h2>
+            <p className="text-white/85 text-sm sm:text-base mt-2">
+              The Fun Zone should feel like a basket of calming little toys, not a lesson.
+            </p>
+          </div>
+          <div className={`shrink-0 rounded-2xl bg-gradient-to-br ${featuredPrompt.accent} px-3 py-2 text-3xl shadow-lg`}>
+            {featuredPrompt.emoji}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 mt-4">
+          {playStyles.map((style) => (
+            <div key={style.label} className="rounded-2xl bg-white/15 px-3 py-3">
+              <p className="text-lg mb-1">{style.emoji}</p>
+              <p className="text-[11px] sm:text-xs font-semibold text-white">{style.label}</p>
+              <p className="text-[10px] sm:text-[11px] text-white/70 mt-1">{style.value}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="rounded-3xl bg-gradient-to-r from-yellow-200 via-rose-100 to-sky-100 p-4 sm:p-5 shadow-xl">
+        <div className="flex items-start gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-white/70 flex items-center justify-center text-2xl shadow-sm shrink-0">
+            {featuredPrompt.emoji}
+          </div>
+          <div>
+            <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.18em] text-rose-500">
+              Today in Many Petals
+            </p>
+            <h3 className="text-gray-800 text-lg sm:text-xl font-bold mt-1">{featuredPrompt.title}</h3>
+            <p className="text-gray-600 text-sm sm:text-base mt-1">{featuredPrompt.prompt}</p>
+          </div>
+        </div>
+      </section>
 
       <button
         onClick={() => {
@@ -277,11 +349,11 @@ const FunZoneHome: React.FC<{
             <div className="flex items-center gap-2 mb-1">
               <h3 className="text-lg sm:text-xl font-bold text-white">My Garden</h3>
               <span className="px-2 py-0.5 rounded-full bg-white/20 text-[10px] sm:text-xs font-semibold text-white">
-                Main World
+                Pretend Play
               </span>
             </div>
             <p className="text-white/85 text-xs sm:text-sm">
-              Grow your world, place surprises, and make it yours.
+              Grow a tiny world, invent little stories, and make every corner feel alive.
             </p>
             <div className="flex flex-wrap gap-2 mt-3 text-[10px] sm:text-xs text-white/90">
               <span className="px-2 py-1 rounded-full bg-white/15">
@@ -311,11 +383,11 @@ const FunZoneHome: React.FC<{
             <div className="flex items-center gap-2 mb-1">
               <h3 className="text-lg sm:text-xl font-bold text-white">Bug Friends Studio</h3>
               <span className="px-2 py-0.5 rounded-full bg-white/20 text-[10px] sm:text-xs font-semibold text-white">
-                Featured
+                Dress-Up
               </span>
             </div>
             <p className="text-white/85 text-xs sm:text-sm">
-              Make bug friends, save your favorites, and build your own collection.
+              Make silly bug pals, dress them up, and save the ones with the biggest personality.
             </p>
             <div className="flex flex-wrap gap-2 mt-3 text-[10px] sm:text-xs text-white/90">
               <span className="px-2 py-1 rounded-full bg-white/15">
@@ -332,8 +404,8 @@ const FunZoneHome: React.FC<{
       {treasureHunt && (
         <section className="space-y-3">
           <div className="flex items-center justify-between px-1">
-            <h2 className="text-white font-bold text-base sm:text-lg drop-shadow">Treasure Hunt</h2>
-            <span className="text-white/70 text-xs">Explore scenes and spot surprises</span>
+            <h2 className="text-white font-bold text-base sm:text-lg drop-shadow">Story Hunt Scenes</h2>
+            <span className="text-white/70 text-xs">Tap around and discover tiny adventures</span>
           </div>
 
           <button
@@ -349,7 +421,7 @@ const FunZoneHome: React.FC<{
                 <h3 className="text-base sm:text-lg font-bold text-white mb-1">{treasureHunt.name}</h3>
                 <p className="text-white/85 text-xs sm:text-sm">{treasureHunt.description}</p>
                 <p className="text-white/70 text-[10px] sm:text-xs mt-2">
-                  Best for repeat play because every scene feels like a tiny story search.
+                  Every scene should feel like a picture book page full of tiny things to notice.
                 </p>
               </div>
             </div>
@@ -359,7 +431,7 @@ const FunZoneHome: React.FC<{
 
       <section className="space-y-3">
         <div className="flex items-center justify-between px-1">
-          <h2 className="text-white font-bold text-base sm:text-lg drop-shadow">Quick Play Corner</h2>
+          <h2 className="text-white font-bold text-base sm:text-lg drop-shadow">Toy Shelf</h2>
           <span className="text-white/70 text-xs">{completedFlightCount} flight levels finished</span>
         </div>
 
@@ -384,11 +456,15 @@ const FunZoneHome: React.FC<{
       <section className="rounded-2xl sm:rounded-3xl bg-white/15 backdrop-blur-sm p-4 sm:p-5 text-white shadow-lg">
         <div className="flex items-center gap-2 mb-2">
           <BookOpen className="w-5 h-5 text-yellow-200" />
-          <h2 className="font-bold text-base sm:text-lg">What to build next</h2>
+          <h2 className="font-bold text-base sm:text-lg">Pretend Play Ideas</h2>
         </div>
-        <p className="text-white/85 text-sm">
-          The biggest future win is a real grow-and-care loop in My Garden: plant, water, hatch, collect, and decorate.
-        </p>
+        <div className="space-y-2 text-white/85 text-sm">
+          {pretendPlayIdeas.map((idea) => (
+            <p key={idea} className="rounded-2xl bg-white/10 px-3 py-2">
+              {idea}
+            </p>
+          ))}
+        </div>
       </section>
     </div>
   );
@@ -446,6 +522,13 @@ const StickerGarden: React.FC<{
 
   const todaySeedIndex = new Date().getDate() % seedOptions.length;
   const featuredSeed = seedOptions[todaySeedIndex];
+  const playPromptOptions = [
+    'Pretend your garden is getting ready for a flower parade.',
+    'Make a cozy corner for a tiny bug friend to visit.',
+    'Grow a surprise patch for a sleepy bee or a giggly ladybird.',
+    'Build a bright little world for a rainy-day garden party.',
+  ] as const;
+  const playPrompt = playPromptOptions[new Date().getDate() % playPromptOptions.length];
   const uniqueEarned = [...new Set(earnedItems)];
   const earnedCategories = uniqueEarned.reduce<Record<string, number>>((acc, itemId) => {
     const item = gardenItems.find((gardenItem) => gardenItem.id === itemId);
@@ -595,6 +678,15 @@ const StickerGarden: React.FC<{
         >
           Use today&apos;s seed
         </button>
+      </div>
+
+      <div className="bg-gradient-to-r from-sky-100 via-white to-emerald-100 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-lg">
+        <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-sky-600">
+          Petal Play Idea
+        </p>
+        <p className="text-gray-700 text-sm sm:text-base font-semibold mt-2">
+          {playPrompt}
+        </p>
       </div>
 
       <div className="bg-white/90 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-lg">

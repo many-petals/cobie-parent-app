@@ -21,7 +21,7 @@ export const gameConfigs: GameConfig[] = [
   {
     id: 'hide-seek',
     name: 'Garden Treasure Hunt',
-    description: 'Find hidden friends and little surprises!',
+    description: 'Tap around story scenes and find playful garden pals!',
     icon: '🔍',
     color: 'bg-green-500',
     bgGradient: 'from-green-400 to-emerald-500',
@@ -32,7 +32,7 @@ export const gameConfigs: GameConfig[] = [
   {
     id: 'seed-sort',
     name: 'Rainbow Seed Scoop',
-    description: 'Scoop seeds into the right color pots!',
+    description: 'Scoop, sort, and serve seeds at the garden cart!',
     icon: '🌱',
     color: 'bg-amber-500',
     bgGradient: 'from-amber-400 to-orange-500',
@@ -43,7 +43,7 @@ export const gameConfigs: GameConfig[] = [
   {
     id: 'memory-match',
     name: 'Friend Flip Cards',
-    description: 'Flip cards and find matching garden pals!',
+    description: 'Flip cards to wake up giggly garden friends!',
     icon: '🃏',
     color: 'bg-purple-500',
     bgGradient: 'from-purple-400 to-pink-500',
@@ -54,7 +54,7 @@ export const gameConfigs: GameConfig[] = [
   {
     id: 'bug-builder',
     name: 'Bug Friends Studio',
-    description: 'Make, save, and show your bug friends!',
+    description: 'Dress up bug pals, save them, and show off their style!',
     icon: '🐛',
     color: 'bg-pink-500',
     bgGradient: 'from-pink-400 to-rose-500',
@@ -65,7 +65,7 @@ export const gameConfigs: GameConfig[] = [
   {
     id: 'ladybird-launch',
     name: 'Ladybird Adventure',
-    description: 'Bounce to stars, leaves, and safe landings!',
+    description: 'Bounce through breezy garden paths and collect happy stars!',
     icon: '🐞',
     color: 'bg-red-500',
     bgGradient: 'from-red-400 to-orange-500',
