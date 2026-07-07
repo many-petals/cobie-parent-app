@@ -132,8 +132,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
 
       {/* Header */}
       <header className="relative z-10 px-4 py-6">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="max-w-4xl mx-auto flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
             <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-lg overflow-hidden">
               <img 
                 src="https://d64gsuwffb70l.cloudfront.net/69357762fff8f7f4abcd8985_1766001587793_82b1f0df.png" 
@@ -141,13 +141,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                 className="w-12 h-12 object-contain"
               />
             </div>
-            <div>
+            <div className="min-w-0">
               <h1 className="text-xl font-bold text-gray-800 font-rounded">Many Petals</h1>
               <p className="text-sm text-gray-500">Calm Garden Moments</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex w-full flex-wrap items-center justify-start gap-2 sm:w-auto sm:justify-end sm:gap-3">
             {/* Cloud sync indicator / Sign in button */}
             {isLoggedIn ? (
               <div className="flex items-center gap-1 px-3 py-1.5 bg-green-100 rounded-full">
@@ -157,6 +157,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
             ) : onOpenAuth && (
               <button
                 onClick={onOpenAuth}
+                aria-label="Sign in"
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-sm hover:shadow-md transition-all text-gray-600 hover:text-gray-800"
               >
                 <CloudOff className="w-4 h-4" />
@@ -167,7 +168,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
             {/* Journal button with streak indicator */}
             <button
               onClick={onOpenJournal}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-100 hover:bg-purple-200 rounded-full shadow-sm hover:shadow-md transition-all text-purple-700"
+              aria-label={currentStreak > 0 ? `Journal, ${currentStreak} day streak` : 'Journal'}
+              className="flex items-center gap-2 px-3 py-2 sm:px-4 bg-purple-100 hover:bg-purple-200 rounded-full shadow-sm hover:shadow-md transition-all text-purple-700"
             >
               <BookOpen className="w-5 h-5" />
               <span className="font-medium text-sm hidden sm:inline">Journal</span>
@@ -184,7 +186,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
             {/* Sticker Book button */}
             <button
               onClick={onOpenStickerBook}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-100 to-purple-100 hover:from-pink-200 hover:to-purple-200 rounded-full shadow-sm hover:shadow-md transition-all text-pink-700"
+              aria-label={stickerCount > 0 ? `Stickers, ${stickerCount} earned` : 'Stickers'}
+              className="flex items-center gap-2 px-3 py-2 sm:px-4 bg-gradient-to-r from-pink-100 to-purple-100 hover:from-pink-200 hover:to-purple-200 rounded-full shadow-sm hover:shadow-md transition-all text-pink-700"
             >
               <Sparkles className="w-5 h-5" />
               <span className="font-medium text-sm hidden sm:inline">Stickers</span>
@@ -198,7 +201,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
             {/* Garden button with badge count */}
             <button
               onClick={onOpenGarden}
-              className="flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm hover:shadow-md transition-all text-gray-700"
+              aria-label={badgeCount > 0 ? `My Garden, ${petalsCount} petals and ${badgeCount} badges` : `My Garden, ${petalsCount} petals`}
+              className="flex items-center gap-2 px-3 py-2 sm:px-4 bg-white rounded-full shadow-sm hover:shadow-md transition-all text-gray-700"
             >
               <div className="w-6 h-6 rounded-full bg-green-400 flex items-center justify-center">
                 <span className="text-white text-xs font-bold">{petalsCount}</span>

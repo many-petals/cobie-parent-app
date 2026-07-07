@@ -266,6 +266,7 @@ const QuietCorner: React.FC<QuietCornerProps> = ({ onClose, soundSettings }) => 
           <button
             onClick={onClose}
             className={`p-2 rounded-full ${isNightScene ? 'bg-white/20 text-white hover:bg-white/30' : 'bg-white/50 text-gray-700 hover:bg-white/70'} backdrop-blur-sm transition-colors`}
+            aria-label="Close Quiet Corner"
           >
             <X className="w-6 h-6" />
           </button>
@@ -359,6 +360,7 @@ const QuietCorner: React.FC<QuietCornerProps> = ({ onClose, soundSettings }) => 
               <button
                 key={s.id}
                 onClick={() => handleSceneChange(s.id)}
+                aria-label={s.name}
                 className={`
                   flex items-center gap-2 px-4 py-2 rounded-xl transition-all
                   ${currentScene === s.id
@@ -383,6 +385,8 @@ const QuietCorner: React.FC<QuietCornerProps> = ({ onClose, soundSettings }) => 
             <div className="relative">
               <button
                 onClick={() => setShowTimerPicker(!showTimerPicker)}
+                aria-label={timerActive ? `Change timer, ${formatTime(timerSeconds)} remaining` : 'Choose timer'}
+                aria-expanded={showTimerPicker}
                 className={`
                   p-3 rounded-xl transition-all
                   ${timerActive
@@ -423,6 +427,7 @@ const QuietCorner: React.FC<QuietCornerProps> = ({ onClose, soundSettings }) => 
             {/* Play/Pause button */}
             <button
               onClick={() => isPlaying ? pause() : resume()}
+              aria-label={isPlaying ? 'Pause background sound' : 'Play background sound'}
               className={`
                 p-4 rounded-xl transition-all
                 ${isNightScene
@@ -437,6 +442,8 @@ const QuietCorner: React.FC<QuietCornerProps> = ({ onClose, soundSettings }) => 
             {/* Sound picker button */}
             <button
               onClick={() => setShowSoundPicker(!showSoundPicker)}
+              aria-label="Choose a background sound"
+              aria-expanded={showSoundPicker}
               className={`
                 p-3 rounded-xl transition-all
                 ${isNightScene
@@ -451,6 +458,7 @@ const QuietCorner: React.FC<QuietCornerProps> = ({ onClose, soundSettings }) => 
             {/* Volume/Mute button */}
             <button
               onClick={toggleMute}
+              aria-label={isMuted ? 'Unmute background sound' : 'Mute background sound'}
               className={`
                 p-3 rounded-xl transition-all
                 ${isMuted
@@ -467,6 +475,7 @@ const QuietCorner: React.FC<QuietCornerProps> = ({ onClose, soundSettings }) => 
             {/* Toggle breathing */}
             <button
               onClick={() => setShowBreathing(!showBreathing)}
+              aria-label={showBreathing ? 'Hide breathing guide' : 'Show breathing guide'}
               className={`
                 p-3 rounded-xl transition-all
                 ${showBreathing
@@ -497,6 +506,7 @@ const QuietCorner: React.FC<QuietCornerProps> = ({ onClose, soundSettings }) => 
                 step="0.05"
                 value={volume}
                 onChange={(e) => setVolume(parseFloat(e.target.value))}
+                aria-label="Background sound volume"
                 className="flex-1 h-2 rounded-full appearance-none cursor-pointer volume-slider"
                 style={{
                   background: `linear-gradient(to right, ${isNightScene ? '#a78bfa' : '#0ea5e9'} 0%, ${isNightScene ? '#a78bfa' : '#0ea5e9'} ${volume * 100}%, ${isNightScene ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'} ${volume * 100}%, ${isNightScene ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'} 100%)`,
@@ -596,6 +606,7 @@ const SoundPickerModal: React.FC<SoundPickerModalProps> = ({
               <button
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.id)}
+                aria-label={cat.name}
                 className={`
                   flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all
                   ${activeCategory === cat.id
