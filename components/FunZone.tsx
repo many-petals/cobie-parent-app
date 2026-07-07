@@ -163,6 +163,7 @@ const FunZone: React.FC<FunZoneProps> = ({
             earnedItems={earnedGardenItems}
             placedItems={placedGardenItems}
             gardenPatches={gardenPatches}
+            savedBugs={savedBugs}
             onPlaceItem={onPlaceGardenItem}
             onRemoveItem={onRemoveGardenItem}
             onUpdateGardenPatches={onUpdateGardenPatches}
@@ -398,6 +399,7 @@ const StickerGarden: React.FC<{
   earnedItems: string[];
   placedItems: { id: string; x: number; y: number }[];
   gardenPatches: GardenPatch[];
+  savedBugs: SavedBug[];
   onPlaceItem: (item: { id: string; x: number; y: number }) => void;
   onRemoveItem: (index: number) => void;
   onUpdateGardenPatches: (patches: GardenPatch[]) => void;
@@ -406,6 +408,7 @@ const StickerGarden: React.FC<{
   earnedItems,
   placedItems,
   gardenPatches,
+  savedBugs,
   onPlaceItem,
   onRemoveItem,
   onUpdateGardenPatches,
@@ -414,6 +417,7 @@ const StickerGarden: React.FC<{
 }) => {
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [selectedSeed, setSelectedSeed] = useState<string | null>(null);
+  const [harvestMessage, setHarvestMessage] = useState<string | null>(null);
   const gardenRef = useRef<HTMLDivElement>(null);
 
   const seedOptions = [
@@ -439,6 +443,23 @@ const StickerGarden: React.FC<{
       rewards: ['rainbow', 'sun', 'cloud', 'star', 'moon'],
     },
   ] as const;
+
+  const todaySeedIndex = new Date().getDate() % seedOptions.length;
+  const featuredSeed = seedOptions[todaySeedIndex];
+  const uniqueEarned = [...new Set(earnedItems)];
+  const earnedCategories = uniqueEarned.reduce<Record<string, number>>((acc, itemId) => {
+    const item = gardenItems.find((gardenItem) => gardenItem.id === itemId);
+    const category = item?.category || 'other';
+    acc[category] = (acc[category] || 0) + 1;
+    return acc;
+  }, {});
+  const categoryHighlights = [
+    { key: 'flowers', label: 'Blooms', emoji: '🌸' },
+    { key: 'creatures', label: 'Friends', emoji: '🐞' },
+    { key: 'sky', label: 'Sky', emoji: '🌈' },
+    { key: 'decor', label: 'Decor', emoji: '🪑' },
+  ];
+  const recentBugs = savedBugs.slice(-3).reverse();
 
   const selectRewardItem = (seedType: string) => {
     const option = seedOptions.find((seed) => seed.id === seedType);
@@ -497,6 +518,11 @@ const StickerGarden: React.FC<{
     if (patch.stage === 'ready' && patch.rewardItemId) {
       playSound('reward');
       await onHarvestItem(patch.rewardItemId);
+      const reward = gardenItems.find((item) => item.id === patch.rewardItemId);
+      setHarvestMessage(`You grew ${reward?.name || 'a surprise'}!`);
+      window.setTimeout(() => {
+        setHarvestMessage(null);
+      }, 2200);
       await updatePatchAt(index, {
         ...patch,
         seedType: null,
@@ -542,10 +568,35 @@ const StickerGarden: React.FC<{
     setSelectedItem(null);
   };
 
-  const uniqueEarned = [...new Set(earnedItems)];
-
   return (
     <div className="space-y-4 max-w-lg mx-auto">
+      <div className="bg-white/90 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-lg">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-pink-500">
+              Today&apos;s Surprise
+            </p>
+            <h3 className="font-bold text-gray-800 text-sm sm:text-base mt-1">
+              {featuredSeed.name}
+            </h3>
+            <p className="text-gray-500 text-xs sm:text-sm mt-1">
+              A special seed is waiting in the garden today.
+            </p>
+          </div>
+          <div className="text-4xl sm:text-5xl">{featuredSeed.emoji}</div>
+        </div>
+        <button
+          onClick={() => {
+            playSound('click');
+            setSelectedItem(null);
+            setSelectedSeed(featuredSeed.id);
+          }}
+          className="mt-3 w-full rounded-xl bg-gradient-to-r from-pink-400 to-orange-400 px-4 py-3 text-white font-semibold shadow active:scale-[0.98] transition-transform"
+        >
+          Use today&apos;s seed
+        </button>
+      </div>
+
       <div className="bg-white/90 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-lg">
         <div className="flex items-center justify-between gap-3 mb-3">
           <div>
@@ -559,6 +610,12 @@ const StickerGarden: React.FC<{
           </span>
         </div>
 
+        {harvestMessage && (
+          <div className="mb-3 rounded-2xl bg-gradient-to-r from-yellow-100 to-pink-100 px-4 py-3 text-sm font-semibold text-pink-700 shadow-sm animate-pulse">
+            {harvestMessage}
+          </div>
+        )}
+
         <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-3">
           {gardenPatches.map((patch, index) => {
             const display = getPatchDisplay(patch);
@@ -568,7 +625,11 @@ const StickerGarden: React.FC<{
                 onClick={() => {
                   void handlePatchTap(index);
                 }}
-                className="rounded-2xl bg-gradient-to-b from-amber-50 to-green-50 border border-amber-100 p-3 sm:p-4 text-center shadow-sm active:scale-[0.98] transition-transform"
+                className={`rounded-2xl border border-amber-100 p-3 sm:p-4 text-center shadow-sm active:scale-[0.98] transition-transform ${
+                  patch.stage === 'ready'
+                    ? 'bg-gradient-to-b from-pink-50 to-yellow-50 animate-pulse'
+                    : 'bg-gradient-to-b from-amber-50 to-green-50'
+                }`}
               >
                 <div className="text-3xl sm:text-4xl mb-2">{display.emoji}</div>
                 <p className={`font-semibold text-xs sm:text-sm ${display.accent}`}>{display.label}</p>
@@ -601,6 +662,63 @@ const StickerGarden: React.FC<{
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="bg-white/90 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-lg">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div>
+            <h3 className="font-bold text-gray-800 text-sm sm:text-base">Collection Progress</h3>
+            <p className="text-gray-500 text-xs sm:text-sm">
+              Watch your garden collection grow a little more each time you play.
+            </p>
+          </div>
+          <span className="px-3 py-1 rounded-full bg-sky-100 text-sky-700 text-[10px] sm:text-xs font-semibold">
+            {uniqueEarned.length} unique finds
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
+          {categoryHighlights.map((category) => (
+            <div key={category.key} className="rounded-xl bg-gray-50 px-3 py-3">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xl">{category.emoji}</span>
+                <p className="font-semibold text-gray-800 text-xs sm:text-sm">{category.label}</p>
+              </div>
+              <p className="text-gray-500 text-xs">
+                {earnedCategories[category.key] || 0} collected
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-white/90 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-lg">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div>
+            <h3 className="font-bold text-gray-800 text-sm sm:text-base">Bug Visitor Parade</h3>
+            <p className="text-gray-500 text-xs sm:text-sm">
+              Your newest bug friends pop by to say hello.
+            </p>
+          </div>
+          <span className="px-3 py-1 rounded-full bg-rose-100 text-rose-700 text-[10px] sm:text-xs font-semibold">
+            {savedBugs.length} saved
+          </span>
+        </div>
+
+        {recentBugs.length === 0 ? (
+          <p className="text-gray-500 text-sm">Make some bug friends in Bug Friends Studio and they&apos;ll visit your garden.</p>
+        ) : (
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            {recentBugs.map((bug) => (
+              <div key={bug.id} className="rounded-2xl bg-gradient-to-b from-pink-50 to-purple-50 p-3 text-center shadow-sm">
+                <div className={`mx-auto mb-2 h-12 w-12 rounded-full ${bug.bodyColor} flex items-center justify-center shadow`}>
+                  <span className="text-2xl">{bug.headType}</span>
+                </div>
+                <p className="text-[11px] sm:text-xs font-semibold text-gray-700">Garden friend</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Garden Area */}
