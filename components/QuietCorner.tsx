@@ -37,6 +37,7 @@ const QuietCorner: React.FC<QuietCornerProps> = ({ onClose, soundSettings }) => 
   const [showBreathing, setShowBreathing] = useState(true);
   
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const initialSceneSoundRef = useRef(scenes[0].defaultSound);
 
   const {
     currentSound,
@@ -53,14 +54,13 @@ const QuietCorner: React.FC<QuietCornerProps> = ({ onClose, soundSettings }) => 
 
   // Start with scene's default sound
   useEffect(() => {
-    const scene = scenes.find(s => s.id === currentScene);
-    if (scene && soundSettings.enabled) {
-      play(scene.defaultSound);
+    if (soundSettings.enabled) {
+      play(initialSceneSoundRef.current, { autoplay: false });
     }
     return () => {
       stop();
     };
-  }, []);
+  }, [play, soundSettings.enabled, stop]);
 
   // Handle scene change
   const handleSceneChange = (sceneId: SceneType) => {

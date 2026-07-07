@@ -113,6 +113,7 @@ const FunZone: React.FC<FunZoneProps> = ({
             playSound('click');
             currentScreen === 'home' ? onClose() : setCurrentScreen('home');
           }}
+          aria-label={currentScreen === 'home' ? 'Close Fun Zone' : 'Back to Fun Zone home'}
           className="w-11 h-11 sm:w-12 sm:h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform"
         >
           {currentScreen === 'home' ? <X className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" /> : <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />}
@@ -136,6 +137,7 @@ const FunZone: React.FC<FunZoneProps> = ({
           onClick={() => {
             toggleMute();
           }}
+          aria-label={isMuted ? 'Unmute Fun Zone sounds' : 'Mute Fun Zone sounds'}
           className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform ${
             isMuted ? 'bg-red-100' : 'bg-white/90'
           }`}

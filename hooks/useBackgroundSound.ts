@@ -6,6 +6,10 @@ interface UseBackgroundSoundOptions {
   settings: SoundSettings;
 }
 
+interface PlaySoundOptions {
+  autoplay?: boolean;
+}
+
 const clamp = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max);
 
@@ -88,10 +92,12 @@ export function useBackgroundSound({ settings }: UseBackgroundSoundOptions) {
   );
 
   const play = useCallback(
-    async (soundId: string) => {
+    async (soundId: string, options: PlaySoundOptions = {}) => {
       if (!settings.enabled) {
         return;
       }
+
+      const { autoplay = true } = options;
 
       const sound = getSoundById(soundId);
       if (!sound) {
@@ -112,6 +118,11 @@ export function useBackgroundSound({ settings }: UseBackgroundSoundOptions) {
 
       const nextVolume = isMuted ? 0 : clamp(volume || sound.defaultVolume, 0, 1);
       audio.volume = nextVolume;
+
+      if (!autoplay) {
+        setIsPlaying(false);
+        return;
+      }
 
       try {
         await audio.play();
