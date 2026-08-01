@@ -10,8 +10,6 @@ import {
   ladybirdLevels, 
   gardenItems, 
   calculateReward,
-  seedColors,
-  sortingLevels,
   HideSeekScene,
   HideSeekItem,
   SceneDecoration
@@ -278,9 +276,9 @@ const FunZone: React.FC<FunZoneProps> = ({
         )}
         
         {currentScreen === 'seed-sort' && (
-          <SeedSortingGame 
+          <PetalKitchenGame 
             onComplete={(score, diff) => handleGameComplete('seed-sort', score, diff)} 
-            playSound={playSound}
+            playSound={playSound} 
           />
         )}
         
@@ -1905,160 +1903,322 @@ const HideAndSeekGame: React.FC<{ onComplete: (score: number, difficulty: string
   );
 };
 
-// Seed Sorting Game with Multiple Sorting Rules
-const SeedSortingGame: React.FC<{ onComplete: (score: number, difficulty: string) => void } & SoundProps> = ({ onComplete, playSound }) => {
-  const [levelIndex, setLevelIndex] = useState(0);
-  const [seeds, setSeeds] = useState<{ id: number; color: string; colorName: string; sorted: boolean }[]>([]);
-  const [score, setScore] = useState(0);
-  const [draggedSeed, setDraggedSeed] = useState<number | null>(null);
-  const [showComplete, setShowComplete] = useState(false);
-  const [showRule, setShowRule] = useState(true);
+const PetalKitchenGame: React.FC<{ onComplete: (score: number, difficulty: string) => void } & SoundProps> = ({ onComplete, playSound }) => {
+  const kitchenFriends = [
+    {
+      id: 'bee',
+      name: 'Bibi Bee',
+      emoji: '🐝',
+      orderName: 'Sunny Blossom Tea',
+      prompt: 'Make me a bright little tea for buzzing around the flowers.',
+      favoriteIds: ['daisy', 'honey', 'sunberry'],
+      stationClass: 'from-yellow-100 via-amber-50 to-orange-100',
+      serveEmoji: '🫖',
+      reaction: 'Bibi Bee took a happy sip and did a tiny wiggle dance.',
+    },
+    {
+      id: 'ladybird',
+      name: 'Lula Ladybird',
+      emoji: '🐞',
+      orderName: 'Berry Picnic Toast',
+      prompt: 'Make me a cozy snack for my mushroom picnic.',
+      favoriteIds: ['strawberry', 'apple', 'rose'],
+      stationClass: 'from-rose-100 via-pink-50 to-orange-100',
+      serveEmoji: '🍓',
+      reaction: 'Lula Ladybird beamed and said your picnic plate looked perfect.',
+    },
+    {
+      id: 'caterpillar',
+      name: 'Coco Caterpillar',
+      emoji: '🐛',
+      orderName: 'Moon Soup',
+      prompt: 'Make me something calm and sleepy for leaf-bed time.',
+      favoriteIds: ['blueberry', 'mint', 'moonmilk'],
+      stationClass: 'from-emerald-100 via-lime-50 to-sky-100',
+      serveEmoji: '🥣',
+      reaction: 'Coco Caterpillar gave a cozy sigh and curled up with a smile.',
+    },
+    {
+      id: 'snail',
+      name: 'Sunny Snail',
+      emoji: '🐌',
+      orderName: 'Rainbow Trail Snack',
+      prompt: 'Make me a shiny trail treat before I scoot home.',
+      favoriteIds: ['apple', 'daisy', 'sparklejam'],
+      stationClass: 'from-sky-100 via-cyan-50 to-purple-100',
+      serveEmoji: '🍡',
+      reaction: 'Sunny Snail sparkled all over and called it a five-star snack.',
+    },
+  ] as const;
 
-  const level = sortingLevels[levelIndex];
-  const activeColors = seedColors.slice(0, level.binCount);
+  const kitchenIngredients = [
+    { id: 'daisy', name: 'Daisy Dust', emoji: '🌼', chipClass: 'bg-yellow-100 text-yellow-700' },
+    { id: 'honey', name: 'Honey Drop', emoji: '🍯', chipClass: 'bg-amber-100 text-amber-700' },
+    { id: 'sunberry', name: 'Sun Berry', emoji: '🍊', chipClass: 'bg-orange-100 text-orange-700' },
+    { id: 'strawberry', name: 'Berry Pop', emoji: '🍓', chipClass: 'bg-rose-100 text-rose-700' },
+    { id: 'apple', name: 'Apple Slice', emoji: '🍎', chipClass: 'bg-red-100 text-red-700' },
+    { id: 'rose', name: 'Rose Petal', emoji: '🌹', chipClass: 'bg-pink-100 text-pink-700' },
+    { id: 'blueberry', name: 'Blue Moon', emoji: '🫐', chipClass: 'bg-blue-100 text-blue-700' },
+    { id: 'mint', name: 'Mint Leaf', emoji: '🌿', chipClass: 'bg-emerald-100 text-emerald-700' },
+    { id: 'moonmilk', name: 'Moon Milk', emoji: '🥛', chipClass: 'bg-slate-100 text-slate-700' },
+    { id: 'sparklejam', name: 'Sparkle Jam', emoji: '✨', chipClass: 'bg-purple-100 text-purple-700' },
+  ] as const;
 
-  useEffect(() => {
-    generateSeeds();
-    setShowRule(true);
-    const timer = setTimeout(() => setShowRule(false), 2000);
-    return () => clearTimeout(timer);
-  }, [levelIndex]);
+  const stirGoal = 4;
+  const [friendIndex, setFriendIndex] = useState(0);
+  const [selectedIngredientIds, setSelectedIngredientIds] = useState<string[]>([]);
+  const [stirCount, setStirCount] = useState(0);
+  const [servedCount, setServedCount] = useState(0);
+  const [celebrationText, setCelebrationText] = useState<string | null>(null);
+  const [menuMoments, setMenuMoments] = useState<string[]>([]);
+  const [rewardGranted, setRewardGranted] = useState(false);
 
-  const generateSeeds = () => {
-    const newSeeds = Array.from({ length: level.seedCount }, (_, i) => {
-      const color = activeColors[Math.floor(Math.random() * activeColors.length)];
-      return {
-        id: i,
-        color: color.class,
-        colorName: color.id,
-        sorted: false,
-      };
-    });
-    setSeeds(newSeeds);
-    setScore(0);
-    setShowComplete(false);
+  const currentFriend = kitchenFriends[friendIndex];
+  const selectedIngredients = selectedIngredientIds
+    .map((ingredientId) => kitchenIngredients.find((ingredient) => ingredient.id === ingredientId))
+    .filter((ingredient): ingredient is (typeof kitchenIngredients)[number] => Boolean(ingredient));
+  const likedCount = selectedIngredientIds.filter((ingredientId) => currentFriend.favoriteIds.includes(ingredientId)).length;
+  const bowlReady = selectedIngredientIds.length === 3;
+  const canServe = bowlReady && stirCount >= stirGoal;
+
+  const clearBowl = () => {
+    playSound('click');
+    setSelectedIngredientIds([]);
+    setStirCount(0);
+    setCelebrationText(null);
   };
 
-  const handleDrop = (binColor: string) => {
-    if (draggedSeed === null) return;
-    
-    const seed = seeds.find(s => s.id === draggedSeed);
-    if (seed && seed.colorName === binColor && !seed.sorted) {
-      // Correct match - play pop sound
-      playSound('seedPop');
-      const newSeeds = seeds.map(s => s.id === draggedSeed ? { ...s, sorted: true } : s);
-      setSeeds(newSeeds);
-      setScore(score + 10);
-      
-      // Check if all sorted
-      const remaining = newSeeds.filter(s => !s.sorted);
-      if (remaining.length === 0) {
-        setShowComplete(true);
-        playSound('binFull');
-        const difficulty = levelIndex < 2 ? 'easy' : levelIndex < 4 ? 'medium' : 'hard';
-        setTimeout(() => onComplete((score + 10) * 10, difficulty), 1000);
-      }
-    } else if (seed && seed.colorName !== binColor) {
-      // Wrong bin - play bounce sound
-      playSound('seedBounce');
+  const addIngredient = (ingredientId: string) => {
+    if (celebrationText || selectedIngredientIds.includes(ingredientId) || selectedIngredientIds.length >= 3) {
+      return;
     }
-    setDraggedSeed(null);
+
+    playSound('seedPop');
+    setSelectedIngredientIds((prev) => [...prev, ingredientId]);
+    setCelebrationText(null);
   };
 
-  const unsortedSeeds = seeds.filter(s => !s.sorted);
-  const sortedCount = seeds.filter(s => s.sorted).length;
+  const surpriseMix = () => {
+    if (celebrationText) return;
+
+    const availableIds = kitchenIngredients.map((ingredient) => ingredient.id);
+    const shuffled = [...availableIds].sort(() => Math.random() - 0.5).slice(0, 3);
+    playSound('click');
+    setSelectedIngredientIds(shuffled);
+    setStirCount(0);
+    setCelebrationText('Your bowl got a silly surprise mix.');
+  };
+
+  const stirBowl = () => {
+    if (!bowlReady || stirCount >= stirGoal) return;
+
+    playSound('seedBounce');
+    setStirCount((prev) => prev + 1);
+  };
+
+  const serveDish = () => {
+    if (!canServe) return;
+
+    playSound('reward');
+    const nextServedCount = servedCount + 1;
+    const warmthLine =
+      likedCount >= 2
+        ? currentFriend.reaction
+        : likedCount === 1
+          ? `${currentFriend.name} liked your mix and asked for one more happy swirl next time.`
+          : `${currentFriend.name} still smiled because your kitchen made something silly and kind.`;
+
+    setServedCount(nextServedCount);
+    setMenuMoments((prev) => Array.from(new Set([...prev, currentFriend.orderName])));
+    setCelebrationText(warmthLine);
+
+    if (!rewardGranted) {
+      onComplete(120 + likedCount * 20, 'easy');
+      setRewardGranted(true);
+    }
+  };
+
+  const nextFriend = () => {
+    playSound('click');
+    setFriendIndex((prev) => (prev + 1) % kitchenFriends.length);
+    setSelectedIngredientIds([]);
+    setStirCount(0);
+    setCelebrationText(null);
+  };
 
   return (
-    <div className="space-y-3 sm:space-y-4 max-w-lg mx-auto">
-      {/* Rule Display */}
-      {showRule && (
-        <div className="bg-white/95 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-lg text-center animate-pulse">
-          <p className="text-base sm:text-lg font-bold text-gray-800">{level.description}</p>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1">Match seeds to their color bins!</p>
-        </div>
-      )}
+    <div className="space-y-4 max-w-lg mx-auto">
+      <div className="bg-white/90 rounded-2xl p-4 shadow-lg">
+        <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-orange-500">
+          Petal Kitchen
+        </p>
+        <h3 className="text-lg sm:text-xl font-bold text-gray-800 mt-1">
+          Pick, mix, stir, serve
+        </h3>
+        <p className="text-sm text-gray-600 mt-1">
+          Make tiny treats for garden friends who love silly little snacks.
+        </p>
 
-      {/* Conveyor Belt */}
-      <div className="bg-gray-700 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-xl">
-        <div className="flex items-center justify-center gap-2 sm:gap-3 min-h-[70px] sm:min-h-[80px] flex-wrap">
-          {unsortedSeeds.map((seed) => (
+        <div className="grid grid-cols-3 gap-2 mt-4 text-[10px] sm:text-xs">
+          <div className="rounded-2xl bg-orange-50 px-3 py-3">
+            <p className="font-semibold text-orange-700">{servedCount} dishes served</p>
+          </div>
+          <div className="rounded-2xl bg-rose-50 px-3 py-3">
+            <p className="font-semibold text-rose-700">{menuMoments.length} menu ideas</p>
+          </div>
+          <div className="rounded-2xl bg-emerald-50 px-3 py-3">
+            <p className="font-semibold text-emerald-700">{currentFriend.favoriteIds.length} happy picks</p>
+          </div>
+        </div>
+      </div>
+
+      <div className={`rounded-3xl bg-gradient-to-b ${currentFriend.stationClass} p-4 sm:p-5 shadow-xl`}>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">
+              Today&apos;s guest
+            </p>
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mt-1">{currentFriend.name}</h3>
+            <p className="text-base sm:text-lg text-gray-700 mt-2">{currentFriend.orderName}</p>
+            <p className="text-sm text-gray-500 mt-1">{currentFriend.prompt}</p>
+          </div>
+          <div className="text-5xl sm:text-6xl">{currentFriend.emoji}</div>
+        </div>
+
+        <div className="mt-4 rounded-3xl bg-white/70 p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Mixing bowl</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {selectedIngredients.length === 0 ? (
+                  <p className="text-sm text-gray-500">Tap 3 ingredients to start your treat.</p>
+                ) : (
+                  selectedIngredients.map((ingredient) => (
+                    <div key={ingredient.id} className={`rounded-full px-3 py-1 text-sm font-semibold ${ingredient.chipClass}`}>
+                      {ingredient.emoji} {ingredient.name}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+            <div className="text-5xl sm:text-6xl">{currentFriend.serveEmoji}</div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-4 gap-2">
+            {Array.from({ length: stirGoal }, (_, index) => (
+              <div
+                key={`stir-${index}`}
+                className={`h-3 rounded-full ${index < stirCount ? 'bg-orange-400' : 'bg-white'}`}
+              />
+            ))}
+          </div>
+
+          <div className="mt-4 flex gap-2">
             <button
-              key={seed.id}
-              onMouseDown={() => {
-                playSound('click');
-                setDraggedSeed(seed.id);
-              }}
-              onTouchStart={() => {
-                playSound('click');
-                setDraggedSeed(seed.id);
-              }}
-              className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-lg active:scale-90 transition-transform cursor-grab ${seed.color} ${
-                draggedSeed === seed.id ? 'ring-4 ring-white scale-110' : ''
+              onClick={stirBowl}
+              disabled={!bowlReady || stirCount >= stirGoal}
+              className={`flex-1 rounded-2xl px-4 py-3 text-sm font-semibold shadow ${
+                bowlReady && stirCount < stirGoal
+                  ? 'bg-orange-400 text-white'
+                  : 'bg-gray-100 text-gray-400'
               }`}
-            />
-          ))}
-          {unsortedSeeds.length === 0 && !showComplete && (
-            <div className="text-white font-bold text-lg sm:text-xl flex items-center gap-2">
-              <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-300" />
-              All Sorted!
-            </div>
-          )}
-          {showComplete && (
-            <div className="text-white font-bold text-lg sm:text-xl flex items-center gap-2">
-              <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-300" />
-              Great Job!
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Sorting Bins */}
-      <div className={`grid gap-2 sm:gap-3`} style={{ gridTemplateColumns: `repeat(${Math.min(level.binCount, 4)}, 1fr)` }}>
-        {activeColors.map((color) => (
-          <button
-            key={color.id}
-            onMouseUp={() => handleDrop(color.id)}
-            onTouchEnd={() => handleDrop(color.id)}
-            className={`aspect-square rounded-xl sm:rounded-2xl shadow-lg flex flex-col items-center justify-center gap-1 sm:gap-2 transition-transform ${
-              draggedSeed !== null ? 'scale-105' : ''
-            } bg-opacity-30 ${color.class.replace('bg-', 'bg-opacity-30 bg-')} border-4 ${color.border}`}
-          >
-            <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full ${color.class}`} />
-            <span className="text-[10px] sm:text-xs font-bold text-gray-600 capitalize">{color.name}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* Progress & Controls */}
-      <div className="bg-white/90 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-lg flex items-center justify-between">
-        <div>
-          <p className="text-xs sm:text-sm text-gray-500">Level {levelIndex + 1}: {level.name}</p>
-          <p className="text-xl sm:text-2xl font-bold text-green-600">{sortedCount}/{seeds.length}</p>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => {
-              playSound('click');
-              generateSeeds();
-            }}
-            className="px-3 sm:px-4 py-2 bg-amber-100 text-amber-700 rounded-lg sm:rounded-xl font-bold flex items-center gap-1 sm:gap-2 text-sm"
-          >
-            <RotateCcw className="w-3 h-3 sm:w-4 sm:h-4" />
-            Reset
-          </button>
-          {levelIndex < sortingLevels.length - 1 && (
-            <button
-              onClick={() => {
-                playSound('click');
-                setLevelIndex(levelIndex + 1);
-              }}
-              className="px-3 sm:px-4 py-2 bg-green-100 text-green-700 rounded-lg sm:rounded-xl font-bold flex items-center gap-1 sm:gap-2 text-sm"
             >
-              Next
-              <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
+              Stir the bowl
             </button>
+            <button
+              onClick={clearBowl}
+              className="rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-gray-600 shadow"
+            >
+              Clear
+            </button>
+          </div>
+
+          <div className="mt-2 flex gap-2">
+            <button
+              onClick={surpriseMix}
+              className="flex-1 rounded-2xl bg-rose-100 px-4 py-3 text-sm font-semibold text-rose-700 shadow"
+            >
+              Surprise mix
+            </button>
+            <button
+              onClick={serveDish}
+              disabled={!canServe}
+              className={`flex-1 rounded-2xl px-4 py-3 text-sm font-semibold shadow ${
+                canServe ? 'bg-emerald-400 text-white' : 'bg-gray-100 text-gray-400'
+              }`}
+            >
+              Serve to {currentFriend.name.split(' ')[0]}
+            </button>
+          </div>
+
+          {celebrationText && (
+            <div className="mt-4 rounded-2xl bg-white px-4 py-4 text-center shadow-sm">
+              <p className="text-lg font-bold text-emerald-700">Yum!</p>
+              <p className="text-sm text-gray-600 mt-1">{celebrationText}</p>
+              <button
+                onClick={nextFriend}
+                className="mt-4 w-full rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 px-4 py-3 text-sm font-semibold text-white shadow"
+              >
+                Cook for the next friend
+              </button>
+            </div>
           )}
         </div>
+      </div>
+
+      <div className="bg-white/90 rounded-2xl p-4 shadow-lg">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div>
+            <h3 className="font-bold text-gray-800 text-sm sm:text-base">Ingredient shelf</h3>
+            <p className="text-gray-500 text-xs sm:text-sm">Pick any 3 little things for your bowl.</p>
+          </div>
+          <span className="px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 text-[10px] sm:text-xs font-semibold">
+            3 taps to fill
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {kitchenIngredients.map((ingredient) => {
+            const isSelected = selectedIngredientIds.includes(ingredient.id);
+            return (
+              <button
+                key={ingredient.id}
+                onClick={() => addIngredient(ingredient.id)}
+                disabled={isSelected || selectedIngredientIds.length >= 3 || Boolean(celebrationText)}
+                className={`rounded-2xl px-3 py-3 text-left shadow-sm transition-transform active:scale-95 ${
+                  isSelected ? `${ingredient.chipClass} ring-2 ring-offset-1 ring-orange-300` : 'bg-gray-50 hover:bg-gray-100'
+                }`}
+              >
+                <div className="text-2xl sm:text-3xl">{ingredient.emoji}</div>
+                <p className="mt-1 text-sm font-semibold text-gray-700">{ingredient.name}</p>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="bg-white/90 rounded-2xl p-4 shadow-lg">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div>
+            <h3 className="font-bold text-gray-800 text-sm sm:text-base">Little menu book</h3>
+            <p className="text-gray-500 text-xs sm:text-sm">Kitchen wins get remembered here.</p>
+          </div>
+          <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-[10px] sm:text-xs font-semibold">
+            Pretend play
+          </span>
+        </div>
+
+        {menuMoments.length === 0 ? (
+          <p className="text-sm text-gray-500">Serve your first garden friend and a menu favorite will appear here.</p>
+        ) : (
+          <div className="grid grid-cols-2 gap-2">
+            {menuMoments.map((moment) => (
+              <div key={moment} className="rounded-2xl bg-purple-50 px-3 py-3">
+                <p className="text-sm font-semibold text-purple-700">{moment}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
