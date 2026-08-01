@@ -1912,6 +1912,7 @@ const PetalKitchenGame: React.FC<{ onComplete: (score: number, difficulty: strin
       orderName: 'Sunny Blossom Tea',
       prompt: 'Make me a bright little tea for buzzing around the flowers.',
       favoriteIds: ['daisy', 'honey', 'sunberry'],
+      favoriteEmojis: ['🌼', '🍯', '🍊'],
       stationClass: 'from-yellow-100 via-amber-50 to-orange-100',
       serveEmoji: '🫖',
       reaction: 'Bibi Bee took a happy sip and did a tiny wiggle dance.',
@@ -1923,6 +1924,7 @@ const PetalKitchenGame: React.FC<{ onComplete: (score: number, difficulty: strin
       orderName: 'Berry Picnic Toast',
       prompt: 'Make me a cozy snack for my mushroom picnic.',
       favoriteIds: ['strawberry', 'apple', 'rose'],
+      favoriteEmojis: ['🍓', '🍎', '🌹'],
       stationClass: 'from-rose-100 via-pink-50 to-orange-100',
       serveEmoji: '🍓',
       reaction: 'Lula Ladybird beamed and said your picnic plate looked perfect.',
@@ -1934,6 +1936,7 @@ const PetalKitchenGame: React.FC<{ onComplete: (score: number, difficulty: strin
       orderName: 'Moon Soup',
       prompt: 'Make me something calm and sleepy for leaf-bed time.',
       favoriteIds: ['blueberry', 'mint', 'moonmilk'],
+      favoriteEmojis: ['🫐', '🌿', '🥛'],
       stationClass: 'from-emerald-100 via-lime-50 to-sky-100',
       serveEmoji: '🥣',
       reaction: 'Coco Caterpillar gave a cozy sigh and curled up with a smile.',
@@ -1945,6 +1948,7 @@ const PetalKitchenGame: React.FC<{ onComplete: (score: number, difficulty: strin
       orderName: 'Rainbow Trail Snack',
       prompt: 'Make me a shiny trail treat before I scoot home.',
       favoriteIds: ['apple', 'daisy', 'sparklejam'],
+      favoriteEmojis: ['🍎', '🌼', '✨'],
       stationClass: 'from-sky-100 via-cyan-50 to-purple-100',
       serveEmoji: '🍡',
       reaction: 'Sunny Snail sparkled all over and called it a five-star snack.',
@@ -1978,8 +1982,24 @@ const PetalKitchenGame: React.FC<{ onComplete: (score: number, difficulty: strin
     .map((ingredientId) => kitchenIngredients.find((ingredient) => ingredient.id === ingredientId))
     .filter((ingredient): ingredient is (typeof kitchenIngredients)[number] => Boolean(ingredient));
   const likedCount = selectedIngredientIds.filter((ingredientId) => currentFriend.favoriteIds.includes(ingredientId)).length;
+  const ingredientsLeft = Math.max(0, 3 - selectedIngredientIds.length);
   const bowlReady = selectedIngredientIds.length === 3;
   const canServe = bowlReady && stirCount >= stirGoal;
+  const canAddIngredients = selectedIngredientIds.length < 3 && !celebrationText;
+  const stepLabel = !bowlReady
+    ? `Step 1: Pick ${ingredientsLeft} more`
+    : stirCount < stirGoal
+      ? `Step 2: Stir ${stirGoal - stirCount} more`
+      : celebrationText
+        ? 'Step 3: Yum!'
+        : 'Step 3: Serve it';
+  const helperLabel = !bowlReady
+    ? 'Tap 3 ingredients your friend might love.'
+    : stirCount < stirGoal
+      ? 'Tap the big bowl to stir the treat.'
+      : celebrationText
+        ? 'Your friend loved it. Cook another one.'
+        : `Tap serve for ${currentFriend.name.split(' ')[0]}.`;
 
   const clearBowl = () => {
     playSound('click');
@@ -1995,6 +2015,15 @@ const PetalKitchenGame: React.FC<{ onComplete: (score: number, difficulty: strin
 
     playSound('seedPop');
     setSelectedIngredientIds((prev) => [...prev, ingredientId]);
+    setCelebrationText(null);
+  };
+
+  const removeIngredient = (ingredientId: string) => {
+    if (celebrationText) return;
+
+    playSound('click');
+    setSelectedIngredientIds((prev) => prev.filter((currentId) => currentId !== ingredientId));
+    setStirCount(0);
     setCelebrationText(null);
   };
 
@@ -2014,6 +2043,11 @@ const PetalKitchenGame: React.FC<{ onComplete: (score: number, difficulty: strin
 
     playSound('seedBounce');
     setStirCount((prev) => prev + 1);
+  };
+
+  const tapBowl = () => {
+    if (celebrationText || !bowlReady || stirCount >= stirGoal) return;
+    stirBowl();
   };
 
   const serveDish = () => {
@@ -2072,6 +2106,27 @@ const PetalKitchenGame: React.FC<{ onComplete: (score: number, difficulty: strin
         </div>
       </div>
 
+      <div className="grid grid-cols-3 gap-2">
+        {[
+          { label: '1 Pick', active: !bowlReady, done: bowlReady || stirCount > 0 || Boolean(celebrationText) },
+          { label: '2 Stir', active: bowlReady && stirCount < stirGoal, done: stirCount >= stirGoal || Boolean(celebrationText) },
+          { label: '3 Serve', active: canServe && !celebrationText, done: Boolean(celebrationText) },
+        ].map((step) => (
+          <div
+            key={step.label}
+            className={`rounded-2xl px-3 py-3 text-center text-sm font-bold shadow-sm ${
+              step.done
+                ? 'bg-emerald-100 text-emerald-700'
+                : step.active
+                  ? 'bg-orange-100 text-orange-700 ring-2 ring-orange-300'
+                  : 'bg-white/80 text-gray-400'
+            }`}
+          >
+            {step.label}
+          </div>
+        ))}
+      </div>
+
       <div className={`rounded-3xl bg-gradient-to-b ${currentFriend.stationClass} p-4 sm:p-5 shadow-xl`}>
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -2081,6 +2136,13 @@ const PetalKitchenGame: React.FC<{ onComplete: (score: number, difficulty: strin
             <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mt-1">{currentFriend.name}</h3>
             <p className="text-base sm:text-lg text-gray-700 mt-2">{currentFriend.orderName}</p>
             <p className="text-sm text-gray-500 mt-1">{currentFriend.prompt}</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {currentFriend.favoriteEmojis.map((emoji) => (
+                <span key={`${currentFriend.id}-${emoji}`} className="rounded-full bg-white/80 px-3 py-1 text-sm font-semibold text-gray-700 shadow-sm">
+                  {emoji}
+                </span>
+              ))}
+            </div>
           </div>
           <div className="text-5xl sm:text-6xl">{currentFriend.emoji}</div>
         </div>
@@ -2088,18 +2150,8 @@ const PetalKitchenGame: React.FC<{ onComplete: (score: number, difficulty: strin
         <div className="mt-4 rounded-3xl bg-white/70 p-4 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Mixing bowl</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {selectedIngredients.length === 0 ? (
-                  <p className="text-sm text-gray-500">Tap 3 ingredients to start your treat.</p>
-                ) : (
-                  selectedIngredients.map((ingredient) => (
-                    <div key={ingredient.id} className={`rounded-full px-3 py-1 text-sm font-semibold ${ingredient.chipClass}`}>
-                      {ingredient.emoji} {ingredient.name}
-                    </div>
-                  ))
-                )}
-              </div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{stepLabel}</p>
+              <p className="mt-1 text-sm font-semibold text-gray-700">{helperLabel}</p>
             </div>
             <div className="text-5xl sm:text-6xl">{currentFriend.serveEmoji}</div>
           </div>
@@ -2113,33 +2165,79 @@ const PetalKitchenGame: React.FC<{ onComplete: (score: number, difficulty: strin
             ))}
           </div>
 
+          <button
+            onClick={tapBowl}
+            disabled={!bowlReady || stirCount >= stirGoal || Boolean(celebrationText)}
+            className={`mt-4 w-full rounded-[2rem] px-4 py-6 shadow-inner transition-transform active:scale-[0.98] ${
+              bowlReady && stirCount < stirGoal && !celebrationText
+                ? 'bg-gradient-to-br from-orange-200 via-rose-100 to-yellow-100'
+                : 'bg-gradient-to-br from-slate-100 to-white'
+            }`}
+          >
+            <div className="mx-auto flex h-44 max-w-sm items-center justify-center rounded-full border-[10px] border-white/80 bg-gradient-to-b from-white via-amber-50 to-orange-100 shadow-lg">
+              <div className="flex flex-wrap items-center justify-center gap-3 px-6">
+                {selectedIngredients.length === 0 ? (
+                  <div className="text-center">
+                    <p className="text-5xl sm:text-6xl">{currentFriend.serveEmoji}</p>
+                    <p className="mt-2 text-base font-bold text-gray-600">Pick 3 yummy things</p>
+                  </div>
+                ) : (
+                  selectedIngredients.map((ingredient) => (
+                    <div key={ingredient.id} className="text-center">
+                      <div className="text-4xl sm:text-5xl">{ingredient.emoji}</div>
+                      <p className="mt-1 text-xs font-bold text-gray-600">{ingredient.name}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+            <p className="mt-3 text-sm font-bold text-gray-700">
+              {!bowlReady
+                ? 'Add 3 ingredients to fill the bowl.'
+                : stirCount < stirGoal
+                  ? 'Tap the bowl to stir and sparkle it up.'
+                  : 'Your treat is ready to serve.'}
+            </p>
+          </button>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            {selectedIngredients.length === 0 ? (
+              <p className="text-sm text-gray-500">Your bowl is empty right now.</p>
+            ) : (
+              selectedIngredients.map((ingredient) => (
+                <button
+                  key={ingredient.id}
+                  onClick={() => removeIngredient(ingredient.id)}
+                  disabled={Boolean(celebrationText)}
+                  className={`rounded-full px-3 py-1 text-sm font-semibold shadow-sm ${
+                    celebrationText ? `${ingredient.chipClass} opacity-70` : `${ingredient.chipClass} hover:brightness-95`
+                  }`}
+                >
+                  {ingredient.emoji} {ingredient.name} {!celebrationText ? '×' : ''}
+                </button>
+              ))
+            )}
+          </div>
+
           <div className="mt-4 flex gap-2">
             <button
-              onClick={stirBowl}
-              disabled={!bowlReady || stirCount >= stirGoal}
-              className={`flex-1 rounded-2xl px-4 py-3 text-sm font-semibold shadow ${
-                bowlReady && stirCount < stirGoal
-                  ? 'bg-orange-400 text-white'
-                  : 'bg-gray-100 text-gray-400'
-              }`}
+              onClick={clearBowl}
+              className="flex-1 rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-gray-600 shadow"
             >
-              Stir the bowl
+              Start over
             </button>
             <button
-              onClick={clearBowl}
-              className="rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-gray-600 shadow"
+              onClick={surpriseMix}
+              disabled={Boolean(celebrationText)}
+              className={`flex-1 rounded-2xl px-4 py-3 text-sm font-semibold shadow ${
+                celebrationText ? 'bg-gray-100 text-gray-400' : 'bg-rose-100 text-rose-700'
+              }`}
             >
-              Clear
+              Surprise mix
             </button>
           </div>
 
           <div className="mt-2 flex gap-2">
-            <button
-              onClick={surpriseMix}
-              className="flex-1 rounded-2xl bg-rose-100 px-4 py-3 text-sm font-semibold text-rose-700 shadow"
-            >
-              Surprise mix
-            </button>
             <button
               onClick={serveDish}
               disabled={!canServe}
@@ -2184,13 +2282,20 @@ const PetalKitchenGame: React.FC<{ onComplete: (score: number, difficulty: strin
               <button
                 key={ingredient.id}
                 onClick={() => addIngredient(ingredient.id)}
-                disabled={isSelected || selectedIngredientIds.length >= 3 || Boolean(celebrationText)}
+                disabled={isSelected || !canAddIngredients}
                 className={`rounded-2xl px-3 py-3 text-left shadow-sm transition-transform active:scale-95 ${
-                  isSelected ? `${ingredient.chipClass} ring-2 ring-offset-1 ring-orange-300` : 'bg-gray-50 hover:bg-gray-100'
+                  isSelected
+                    ? `${ingredient.chipClass} ring-2 ring-offset-1 ring-orange-300`
+                    : !canAddIngredients
+                      ? 'bg-gray-50 text-gray-300'
+                      : 'bg-gray-50 hover:bg-gray-100'
                 }`}
               >
                 <div className="text-2xl sm:text-3xl">{ingredient.emoji}</div>
                 <p className="mt-1 text-sm font-semibold text-gray-700">{ingredient.name}</p>
+                <p className="mt-1 text-xs text-gray-500">
+                  {isSelected ? 'In your bowl' : canAddIngredients ? 'Tap to add' : 'Bowl is full'}
+                </p>
               </button>
             );
           })}
@@ -2219,6 +2324,10 @@ const PetalKitchenGame: React.FC<{ onComplete: (score: number, difficulty: strin
             ))}
           </div>
         )}
+
+        <div className="mt-3 rounded-2xl bg-orange-50 px-4 py-3 text-sm font-semibold text-orange-700">
+          {servedCount === 0 ? 'Your bug cafe opens with one happy snack.' : `Your bug cafe has served ${servedCount} smiling snack${servedCount === 1 ? '' : 's'}.`}
+        </div>
       </div>
     </div>
   );
