@@ -39,6 +39,100 @@ interface FunZoneProps {
 
 type GameScreen = 'home' | 'garden' | 'hide-seek' | 'seed-sort' | 'memory-match' | 'bug-builder' | 'ladybird-launch';
 
+type RescueScenario = {
+  id: string;
+  title: string;
+  subtitle: string;
+  prompt: string;
+  helperEmoji: string;
+  spotEmoji: string;
+  rewardItemId: string;
+  type: 'tap' | 'choice' | 'trail';
+  accent: string;
+  successMessage: string;
+  details: {
+    targetCount?: number;
+    choices?: Array<{
+      id: string;
+      emoji: string;
+      label: string;
+      correct?: boolean;
+    }>;
+    checkpoints?: string[];
+  };
+};
+
+const rescueScenarios: RescueScenario[] = [
+  {
+    id: 'rainy-ladybird',
+    title: 'Rainy Ladybird',
+    subtitle: 'Dry the raindrops away',
+    prompt: 'Tap each raindrop to help the little ladybird feel warm and ready to flutter.',
+    helperEmoji: '🐞',
+    spotEmoji: '🌦️',
+    rewardItemId: 'ladybug',
+    type: 'tap',
+    accent: 'from-rose-400 via-pink-400 to-orange-300',
+    successMessage: 'The ladybird flutters happily back into the flowers.',
+    details: {
+      targetCount: 6,
+    },
+  },
+  {
+    id: 'lost-bee',
+    title: 'Lost Bee',
+    subtitle: 'Find the sunny flower',
+    prompt: 'This bee feels a little lost. Pick the bright golden flower so she knows where to land.',
+    helperEmoji: '🐝',
+    spotEmoji: '🌼',
+    rewardItemId: 'bee',
+    type: 'choice',
+    accent: 'from-yellow-300 via-amber-300 to-orange-300',
+    successMessage: 'Buzz buzz. The bee found the perfect flower.',
+    details: {
+      choices: [
+        { id: 'gold', emoji: '🌼', label: 'Sunny flower', correct: true },
+        { id: 'pond', emoji: '💧', label: 'Pond ripple' },
+        { id: 'mushroom', emoji: '🍄', label: 'Mushroom hat' },
+      ],
+    },
+  },
+  {
+    id: 'sleepy-caterpillar',
+    title: 'Sleepy Caterpillar',
+    subtitle: 'Choose a cozy leaf bed',
+    prompt: 'The caterpillar is ready for a rest. Pick the soft leafy bed that looks warm and gentle.',
+    helperEmoji: '🐛',
+    spotEmoji: '🍃',
+    rewardItemId: 'clover',
+    type: 'choice',
+    accent: 'from-emerald-300 via-lime-300 to-green-300',
+    successMessage: 'Snuggle success. The caterpillar is tucked in and smiling.',
+    details: {
+      choices: [
+        { id: 'cozy-leaf', emoji: '🍃', label: 'Soft leaf curl', correct: true },
+        { id: 'pebble', emoji: '🪨', label: 'Bumpy pebble' },
+        { id: 'puddle', emoji: '💦', label: 'Splashy puddle' },
+      ],
+    },
+  },
+  {
+    id: 'snail-trail',
+    title: 'Snail Trail',
+    subtitle: 'Follow the glowing path',
+    prompt: 'Tap the sparkling trail in order so the little snail can wiggle all the way home.',
+    helperEmoji: '🐌',
+    spotEmoji: '✨',
+    rewardItemId: 'snail',
+    type: 'trail',
+    accent: 'from-sky-300 via-cyan-300 to-blue-300',
+    successMessage: 'The snail reached home and gave a twinkly shell wiggle.',
+    details: {
+      checkpoints: ['1', '2', '3'],
+    },
+  },
+];
+
 const FunZone: React.FC<FunZoneProps> = ({
   onClose,
   onEarnReward,
@@ -122,7 +216,7 @@ const FunZone: React.FC<FunZoneProps> = ({
         <div className="flex items-center gap-2">
           <h1 className="text-xl sm:text-2xl font-bold text-white drop-shadow-lg">
             {currentScreen === 'home' ? 'Fun Zone' : 
-             currentScreen === 'garden' ? 'My Garden' :
+             currentScreen === 'garden' ? 'Bug Village' :
              gameConfigs.find(g => g.id === currentScreen)?.name || 'Fun Zone'}
           </h1>
           {/* Online/Offline indicator */}
@@ -161,7 +255,7 @@ const FunZone: React.FC<FunZoneProps> = ({
         )}
         
         {currentScreen === 'garden' && (
-          <StickerGarden
+          <BugVillage
             earnedItems={earnedGardenItems}
             placedItems={placedGardenItems}
             gardenPatches={gardenPatches}
@@ -254,40 +348,40 @@ const FunZoneHome: React.FC<{
   const treasureHunt = gameConfigs.find((game) => game.id === "hide-seek");
   const storyPromptOptions = [
     {
-      title: 'Tea Party in the Tulips',
-      prompt: 'Set up a tiny garden tea party and make sure every bug friend gets a special seat.',
+      title: 'Ladybird Rain Rescue',
+      prompt: 'Dry tiny raindrops, warm little wings, and help a garden friend feel brave again.',
       emoji: '🫖',
       accent: 'from-rose-400 to-orange-300',
     },
     {
-      title: 'Sleepy Bee Bedtime',
-      prompt: 'Find a soft cloud, a cozy flower, and a calm spot for a sleepy bee to rest.',
+      title: 'Bee Finds the Bloom',
+      prompt: 'Guide a buzzy bee back to the sunny flower with the brightest petals.',
       emoji: '💤',
       accent: 'from-sky-400 to-cyan-300',
     },
     {
-      title: 'Petal Parade',
-      prompt: 'Make a silly bug band, grow bright flowers, and lead a happy parade across the garden.',
+      title: 'Snail Sparkle Trail',
+      prompt: 'Tap glowing garden stars in order to help a little snail wiggle home.',
       emoji: '🎺',
       accent: 'from-fuchsia-400 to-pink-300',
     },
     {
-      title: 'Rainy Day Rescue',
-      prompt: 'Help tiny garden friends find a rainbow, a puddle, and a cheerful place to play.',
+      title: 'Caterpillar Cozy Corner',
+      prompt: 'Choose the softest leafy bed so a sleepy caterpillar can curl up safely.',
       emoji: '🌦️',
       accent: 'from-emerald-400 to-teal-300',
     },
   ] as const;
   const featuredPrompt = storyPromptOptions[new Date().getDate() % storyPromptOptions.length];
   const playStyles = [
-    { label: 'Pretend play', value: 'Tiny worlds and little stories', emoji: '🌼' },
-    { label: 'Dress-up fun', value: 'Silly bug looks and remixes', emoji: '🎀' },
-    { label: 'Gentle surprises', value: 'Collect, grow, and discover', emoji: '✨' },
+    { label: 'Easy to start', value: 'One clear tap game', emoji: '💛' },
+    { label: 'Tiny friends', value: 'Bugs with sweet little needs', emoji: '🐞' },
+    { label: 'Happy payoff', value: 'Help, cheer, and collect', emoji: '✨' },
   ];
   const pretendPlayIdeas = [
-    `${savedBugCount > 0 ? 'Invite your saved bug friends' : 'Make a new bug friend'} to a garden picnic.`,
-    `Hide a ${gardenItemCount > 0 ? 'special treasure' : 'shiny surprise'} and go looking together.`,
-    'Pretend the ladybird trail is a delivery trip for flowers and stars.',
+    'Pretend each bug corner is waiting for a kind little helper.',
+    `${savedBugCount > 0 ? 'Invite your saved bug pals' : 'Make a bug pal'} to clap for each bug friend.`,
+    `Count how many ${gardenItemCount > 0 ? 'garden surprises' : 'tiny bug things'} you can discover today.`,
   ];
 
   return (
@@ -299,10 +393,10 @@ const FunZoneHome: React.FC<{
               Petal Playtime
             </p>
             <h2 className="text-xl sm:text-2xl font-bold mt-1 drop-shadow">
-              Tiny worlds, silly friends, gentle fun
+              Tap, giggle, help, repeat
             </h2>
             <p className="text-white/85 text-sm sm:text-base mt-2">
-              The Fun Zone should feel like a basket of calming little toys, not a lesson.
+              Bug Village turns the garden into a living toy with one happy little bug to help at a time.
             </p>
           </div>
           <div className={`shrink-0 rounded-2xl bg-gradient-to-br ${featuredPrompt.accent} px-3 py-2 text-3xl shadow-lg`}>
@@ -349,20 +443,20 @@ const FunZoneHome: React.FC<{
           </div>
           <div className="text-left flex-1">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-lg sm:text-xl font-bold text-white">My Garden</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-white">Bug Village</h3>
               <span className="px-2 py-0.5 rounded-full bg-white/20 text-[10px] sm:text-xs font-semibold text-white">
-                Pretend Play
+                Most Reliable
               </span>
             </div>
             <p className="text-white/85 text-xs sm:text-sm">
-              Grow a tiny world, invent little stories, and make every corner feel alive.
+              Pick one bug friend, tap the big helpers, and see them smile right away.
             </p>
             <div className="flex flex-wrap gap-2 mt-3 text-[10px] sm:text-xs text-white/90">
               <span className="px-2 py-1 rounded-full bg-white/15">
-                {gardenItemCount} items earned
+                {gardenItemCount} garden finds
               </span>
               <span className="px-2 py-1 rounded-full bg-white/15">
-                {placedItemCount} items placed
+                {placedItemCount} corners decorated
               </span>
             </div>
           </div>
@@ -458,7 +552,7 @@ const FunZoneHome: React.FC<{
       <section className="rounded-2xl sm:rounded-3xl bg-white/15 backdrop-blur-sm p-4 sm:p-5 text-white shadow-lg">
         <div className="flex items-center gap-2 mb-2">
           <BookOpen className="w-5 h-5 text-yellow-200" />
-          <h2 className="font-bold text-base sm:text-lg">Pretend Play Ideas</h2>
+          <h2 className="font-bold text-base sm:text-lg">Bug Play Ideas</h2>
         </div>
         <div className="space-y-2 text-white/85 text-sm">
           {pretendPlayIdeas.map((idea) => (
@@ -468,6 +562,660 @@ const FunZoneHome: React.FC<{
           ))}
         </div>
       </section>
+    </div>
+  );
+};
+
+const TinyBugRescue: React.FC<{
+  earnedItems: string[];
+  placedItems: { id: string; x: number; y: number }[];
+  gardenPatches: GardenPatch[];
+  savedBugs: SavedBug[];
+  onPlaceItem: (item: { id: string; x: number; y: number }) => void;
+  onRemoveItem: (index: number) => void;
+  onUpdateGardenPatches: (patches: GardenPatch[]) => void;
+  onHarvestItem: (itemId: string) => Promise<void>;
+} & SoundProps> = ({
+  earnedItems,
+  placedItems,
+  gardenPatches,
+  savedBugs,
+  onHarvestItem,
+  playSound,
+}) => {
+  const [activeScenarioId, setActiveScenarioId] = useState<string | null>(null);
+  const [tapProgress, setTapProgress] = useState(0);
+  const [trailProgress, setTrailProgress] = useState(0);
+  const [completedScenarios, setCompletedScenarios] = useState<string[]>([]);
+  const [rescueMessage, setRescueMessage] = useState<string | null>(null);
+  const [choiceFeedback, setChoiceFeedback] = useState<string | null>(null);
+
+  const uniqueEarned = [...new Set(earnedItems)];
+  const earnedCategories = uniqueEarned.reduce<Record<string, number>>((acc, itemId) => {
+    const item = gardenItems.find((gardenItem) => gardenItem.id === itemId);
+    const category = item?.category || 'other';
+    acc[category] = (acc[category] || 0) + 1;
+    return acc;
+  }, {});
+  const categoryHighlights = [
+    { key: 'flowers', label: 'Blooms', emoji: '🌸' },
+    { key: 'creatures', label: 'Friends', emoji: '🐞' },
+    { key: 'sky', label: 'Sky', emoji: '🌈' },
+    { key: 'decor', label: 'Decor', emoji: '🪑' },
+  ];
+  const recentBugs = savedBugs.slice(-3).reverse();
+  const activeScenario = rescueScenarios.find((scenario) => scenario.id === activeScenarioId) || null;
+  const rescueSpots = rescueScenarios.map((scenario, index) => ({
+    ...scenario,
+    left: [18, 74, 28, 68][index],
+    top: [62, 36, 28, 72][index],
+  }));
+  const rescueCount = uniqueEarned.filter((itemId) => {
+    const item = gardenItems.find((gardenItem) => gardenItem.id === itemId);
+    return item?.category === 'creatures' || item?.id === 'clover';
+  }).length;
+
+  const resetScenarioState = () => {
+    setTapProgress(0);
+    setTrailProgress(0);
+    setChoiceFeedback(null);
+  };
+
+  const openScenario = (scenarioId: string) => {
+    playSound('click');
+    resetScenarioState();
+    setActiveScenarioId(scenarioId);
+  };
+
+  const completeScenario = async (scenario: RescueScenario) => {
+    playSound('reward');
+    await onHarvestItem(scenario.rewardItemId);
+    setCompletedScenarios((prev) => Array.from(new Set([...prev, scenario.id])));
+    setRescueMessage(scenario.successMessage);
+    window.setTimeout(() => setRescueMessage(null), 2600);
+    resetScenarioState();
+    setActiveScenarioId(null);
+  };
+
+  const handleTapRescue = async () => {
+    if (!activeScenario?.details.targetCount) return;
+    playSound('seedBounce');
+    const nextProgress = tapProgress + 1;
+    setTapProgress(nextProgress);
+    if (nextProgress >= activeScenario.details.targetCount) {
+      await completeScenario(activeScenario);
+    }
+  };
+
+  const handleChoiceSelect = async (choiceId: string) => {
+    if (!activeScenario?.details.choices) return;
+    const selectedChoice = activeScenario.details.choices.find((choice) => choice.id === choiceId);
+    if (!selectedChoice) return;
+
+    playSound('click');
+
+    if (selectedChoice.correct) {
+      setChoiceFeedback('That feels warm and just right.');
+      window.setTimeout(() => setChoiceFeedback(null), 900);
+      await completeScenario(activeScenario);
+      return;
+    }
+
+    setChoiceFeedback('Try the softer, kinder choice.');
+  };
+
+  const handleTrailTap = async (checkpointIndex: number) => {
+    if (!activeScenario?.details.checkpoints) return;
+    if (checkpointIndex !== trailProgress) {
+      setChoiceFeedback('Start at the first sparkle, then follow the trail.');
+      return;
+    }
+
+    playSound('click');
+    const nextProgress = checkpointIndex + 1;
+    setTrailProgress(nextProgress);
+    setChoiceFeedback(null);
+
+    if (nextProgress >= activeScenario.details.checkpoints.length) {
+      await completeScenario(activeScenario);
+    }
+  };
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <div className="bg-white/90 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-lg">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-pink-500">
+              Tiny Bug Rescue
+            </p>
+            <h3 className="font-bold text-gray-800 text-sm sm:text-base mt-1">
+              Kind little missions for ages 3 to 7
+            </h3>
+            <p className="text-gray-500 text-xs sm:text-sm mt-1">
+              Tap a garden spot, help one bug friend, and collect a happy little surprise.
+            </p>
+          </div>
+          <div className="text-4xl sm:text-5xl">🐞</div>
+        </div>
+        <div className="mt-3 grid grid-cols-3 gap-2 text-[10px] sm:text-xs">
+          <div className="rounded-2xl bg-rose-50 px-3 py-3">
+            <p className="font-semibold text-rose-700">{rescueScenarios.length} rescue spots</p>
+          </div>
+          <div className="rounded-2xl bg-amber-50 px-3 py-3">
+            <p className="font-semibold text-amber-700">{completedScenarios.length} kind jobs done</p>
+          </div>
+          <div className="rounded-2xl bg-emerald-50 px-3 py-3">
+            <p className="font-semibold text-emerald-700">{rescueCount} bug finds</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-gradient-to-r from-sky-100 via-white to-emerald-100 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-lg">
+        <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-sky-600">
+          Gentle Play Idea
+        </p>
+        <p className="text-gray-700 text-sm sm:text-base font-semibold mt-2">
+          Help one bug at a time, then make up a tiny story about where it goes next.
+        </p>
+      </div>
+
+      <div className="bg-white/90 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-lg">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div>
+            <h3 className="font-bold text-gray-800 text-sm sm:text-base">Choose a Rescue Spot</h3>
+            <p className="text-gray-500 text-xs sm:text-sm">
+              Each garden spot has one clear, calm mission with a happy payoff.
+            </p>
+          </div>
+          <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-[10px] sm:text-xs font-semibold">
+            {gardenPatches.length || rescueScenarios.length} ready now
+          </span>
+        </div>
+
+        {rescueMessage && (
+          <div className="mb-3 rounded-2xl bg-gradient-to-r from-yellow-100 to-pink-100 px-4 py-3 text-sm font-semibold text-pink-700 shadow-sm animate-pulse">
+            {rescueMessage}
+          </div>
+        )}
+
+        <div className="relative w-full aspect-[4/3] rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl bg-gradient-to-b from-sky-300 via-emerald-200 to-green-400">
+          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/30 to-transparent" />
+          <div className="absolute top-5 left-8 text-2xl sm:text-3xl">☁️</div>
+          <div className="absolute top-10 right-10 text-3xl sm:text-4xl">🌤️</div>
+          <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-green-700 to-green-500" />
+          <div className="absolute bottom-12 left-6 text-4xl sm:text-5xl opacity-70">🌼</div>
+          <div className="absolute bottom-8 right-6 text-4xl sm:text-5xl opacity-70">🌷</div>
+          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 text-6xl sm:text-7xl opacity-20">🪴</div>
+
+          {rescueSpots.map((scenario) => {
+            const isCompleted = completedScenarios.includes(scenario.id);
+            return (
+              <button
+                key={scenario.id}
+                onClick={() => openScenario(scenario.id)}
+                className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-2xl px-3 py-3 shadow-lg transition-transform active:scale-95 ${
+                  isCompleted ? 'bg-white/95 ring-2 ring-yellow-300' : 'bg-white/90'
+                }`}
+                style={{ left: `${scenario.left}%`, top: `${scenario.top}%` }}
+              >
+                <div className="text-2xl sm:text-3xl">{scenario.spotEmoji}</div>
+                <p className="mt-1 text-[10px] sm:text-xs font-semibold text-gray-700">{scenario.title}</p>
+                {isCompleted && (
+                  <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-yellow-400 text-white flex items-center justify-center shadow">
+                    <Check className="w-4 h-4" />
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {activeScenario && (
+        <div className="bg-white/95 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xl border border-white/70">
+          <div className={`rounded-2xl bg-gradient-to-r ${activeScenario.accent} p-4 text-white shadow-lg`}>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[10px] sm:text-xs uppercase tracking-[0.18em] text-white/80 font-semibold">
+                  Tiny Friend Needs Help
+                </p>
+                <h3 className="text-lg sm:text-xl font-bold mt-1">{activeScenario.title}</h3>
+                <p className="text-sm text-white/90 mt-1">{activeScenario.subtitle}</p>
+              </div>
+              <div className="text-4xl sm:text-5xl">{activeScenario.helperEmoji}</div>
+            </div>
+            <p className="text-sm sm:text-base text-white/95 mt-3">{activeScenario.prompt}</p>
+          </div>
+
+          {choiceFeedback && (
+            <div className="mt-3 rounded-2xl bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-700">
+              {choiceFeedback}
+            </div>
+          )}
+
+          {activeScenario.type === 'tap' && (
+            <div className="mt-4 grid grid-cols-3 gap-3">
+              {Array.from({ length: activeScenario.details.targetCount || 0 }).map((_, index) => {
+                const isTapped = index < tapProgress;
+                return (
+                  <button
+                    key={`drop-${index}`}
+                    onClick={() => {
+                      void handleTapRescue();
+                    }}
+                    disabled={isTapped}
+                    className={`rounded-2xl p-4 text-center shadow-sm transition-transform active:scale-95 ${
+                      isTapped ? 'bg-yellow-100' : 'bg-sky-50 hover:bg-sky-100'
+                    }`}
+                  >
+                    <div className="text-3xl sm:text-4xl">{isTapped ? '✨' : '💧'}</div>
+                    <p className="mt-1 text-xs font-semibold text-gray-600">
+                      {isTapped ? 'Dry now' : 'Tap drop'}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {activeScenario.type === 'choice' && activeScenario.details.choices && (
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {activeScenario.details.choices.map((choice) => (
+                <button
+                  key={choice.id}
+                  onClick={() => {
+                    void handleChoiceSelect(choice.id);
+                  }}
+                  className="rounded-2xl bg-emerald-50 hover:bg-emerald-100 px-4 py-4 text-center shadow-sm transition-transform active:scale-95"
+                >
+                  <div className="text-3xl sm:text-4xl">{choice.emoji}</div>
+                  <p className="mt-2 text-sm font-semibold text-gray-700">{choice.label}</p>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {activeScenario.type === 'trail' && activeScenario.details.checkpoints && (
+            <div className="mt-4">
+              <div className="flex items-center justify-center gap-2 sm:gap-4">
+                {activeScenario.details.checkpoints.map((checkpoint, index) => {
+                  const isDone = index < trailProgress;
+                  const isNext = index === trailProgress;
+                  return (
+                    <React.Fragment key={checkpoint}>
+                      <button
+                        onClick={() => {
+                          void handleTrailTap(index);
+                        }}
+                        className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full text-xl sm:text-2xl shadow-lg transition-transform active:scale-95 ${
+                          isDone
+                            ? 'bg-yellow-200 text-yellow-700'
+                            : isNext
+                              ? 'bg-sky-200 text-sky-700 ring-2 ring-sky-400'
+                              : 'bg-white text-gray-400'
+                        }`}
+                      >
+                        {isDone ? '⭐' : checkpoint}
+                      </button>
+                      {index < activeScenario.details.checkpoints.length - 1 && (
+                        <div className={`h-1 w-6 sm:w-10 rounded-full ${index < trailProgress ? 'bg-yellow-300' : 'bg-gray-200'}`} />
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </div>
+              <p className="mt-4 text-center text-sm font-semibold text-gray-600">
+                Start at 1, then follow the sparkles all the way home.
+              </p>
+            </div>
+          )}
+
+          <button
+            onClick={() => {
+              playSound('click');
+              resetScenarioState();
+              setActiveScenarioId(null);
+            }}
+            className="mt-4 w-full rounded-2xl bg-gray-100 hover:bg-gray-200 px-4 py-3 text-sm font-semibold text-gray-700"
+          >
+            Back to the garden
+          </button>
+        </div>
+      )}
+
+      <div className="bg-white/90 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-lg">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div>
+            <h3 className="font-bold text-gray-800 text-sm sm:text-base">Rescue Collection</h3>
+            <p className="text-gray-500 text-xs sm:text-sm">
+              Each rescue adds a sweet little find to your garden shelf.
+            </p>
+          </div>
+          <span className="px-3 py-1 rounded-full bg-sky-100 text-sky-700 text-[10px] sm:text-xs font-semibold">
+            {uniqueEarned.length} unique finds
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
+          {categoryHighlights.map((category) => (
+            <div key={category.key} className="rounded-xl bg-gray-50 px-3 py-3">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xl">{category.emoji}</span>
+                <p className="font-semibold text-gray-800 text-xs sm:text-sm">{category.label}</p>
+              </div>
+              <p className="text-gray-500 text-xs">
+                {earnedCategories[category.key] || 0} collected
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-3 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+          {placedItems.length} decorated corners are still waiting in your wider garden world.
+        </div>
+      </div>
+
+      <div className="bg-white/90 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-lg">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div>
+            <h3 className="font-bold text-gray-800 text-sm sm:text-base">Bug Visitor Parade</h3>
+            <p className="text-gray-500 text-xs sm:text-sm">
+              Your newest bug friends pop by to cheer for every rescue.
+            </p>
+          </div>
+          <span className="px-3 py-1 rounded-full bg-rose-100 text-rose-700 text-[10px] sm:text-xs font-semibold">
+            {savedBugs.length} saved
+          </span>
+        </div>
+
+        {recentBugs.length === 0 ? (
+          <p className="text-gray-500 text-sm">Make some bug friends in Bug Friends Studio and they&apos;ll visit your rescue garden.</p>
+        ) : (
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            {recentBugs.map((bug) => (
+              <div key={bug.id} className="rounded-2xl bg-gradient-to-b from-pink-50 to-purple-50 p-3 text-center shadow-sm">
+                <div className={`mx-auto mb-2 h-12 w-12 rounded-full ${bug.bodyColor} flex items-center justify-center shadow`}>
+                  <span className="text-2xl">{bug.headType}</span>
+                </div>
+                <p className="text-[11px] sm:text-xs font-semibold text-gray-700">Garden friend</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const BugVillage: React.FC<{
+  earnedItems: string[];
+  placedItems: { id: string; x: number; y: number }[];
+  gardenPatches: GardenPatch[];
+  savedBugs: SavedBug[];
+  onPlaceItem: (item: { id: string; x: number; y: number }) => void;
+  onRemoveItem: (index: number) => void;
+  onUpdateGardenPatches: (patches: GardenPatch[]) => void;
+  onHarvestItem: (itemId: string) => Promise<void>;
+} & SoundProps> = ({
+  earnedItems,
+  placedItems,
+  savedBugs,
+  onHarvestItem,
+  playSound,
+}) => {
+  const villageFriends = [
+    {
+      id: 'ladybug',
+      name: 'Lula Ladybird',
+      home: 'Mushroom House',
+      need: 'Dry my wings',
+      helperText: 'Tap the raindrops away.',
+      objectEmoji: '💧',
+      doneEmoji: '✨',
+      friendEmoji: '🐞',
+      homeEmoji: '🍄',
+      rewardItemId: 'ladybug',
+      rewardLabel: 'mushroom lamp',
+      totalSteps: 5,
+      bgClass: 'from-rose-200 via-amber-100 to-yellow-100',
+    },
+    {
+      id: 'bee',
+      name: 'Bibi Bee',
+      home: 'Sunflower Nook',
+      need: 'Feed me nectar',
+      helperText: 'Tap the flower drops.',
+      objectEmoji: '🌼',
+      doneEmoji: '🍯',
+      friendEmoji: '🐝',
+      homeEmoji: '🌻',
+      rewardItemId: 'bee',
+      rewardLabel: 'honey pot',
+      totalSteps: 4,
+      bgClass: 'from-yellow-100 via-orange-100 to-amber-50',
+    },
+    {
+      id: 'caterpillar',
+      name: 'Coco Caterpillar',
+      home: 'Leafy Bed',
+      need: 'Tuck me in',
+      helperText: 'Tap the sleepy pillows.',
+      objectEmoji: '🛏️',
+      doneEmoji: '🌙',
+      friendEmoji: '🐛',
+      homeEmoji: '🍃',
+      rewardItemId: 'clover',
+      rewardLabel: 'moon pillow',
+      totalSteps: 3,
+      bgClass: 'from-emerald-100 via-lime-100 to-green-50',
+    },
+    {
+      id: 'snail',
+      name: 'Sunny Snail',
+      home: 'Twinkle Trail',
+      need: 'Guide me home',
+      helperText: 'Tap the sparkle dots.',
+      objectEmoji: '⭐',
+      doneEmoji: '🏡',
+      friendEmoji: '🐌',
+      homeEmoji: '🌈',
+      rewardItemId: 'snail',
+      rewardLabel: 'sparkle pebble',
+      totalSteps: 4,
+      bgClass: 'from-sky-100 via-cyan-100 to-blue-50',
+    },
+  ] as const;
+
+  const [activeFriendIndex, setActiveFriendIndex] = useState(0);
+  const [careProgress, setCareProgress] = useState(0);
+  const [celebrationText, setCelebrationText] = useState<string | null>(null);
+  const [unlockedRewards, setUnlockedRewards] = useState<string[]>([]);
+
+  const uniqueEarned = [...new Set(earnedItems)];
+  const currentFriend = villageFriends[activeFriendIndex];
+  const completedSteps = Array.from({ length: currentFriend.totalSteps }, (_, index) => index < careProgress);
+  const bugFriendCount = uniqueEarned.filter((itemId) => {
+    const item = gardenItems.find((gardenItem) => gardenItem.id === itemId);
+    return item?.category === 'creatures' || item?.id === 'clover';
+  }).length;
+
+  const switchFriend = (index: number) => {
+    playSound('click');
+    setActiveFriendIndex(index);
+    setCareProgress(0);
+    setCelebrationText(null);
+  };
+
+  const completeFriendCare = async () => {
+    await onHarvestItem(currentFriend.rewardItemId);
+    playSound('reward');
+    setUnlockedRewards((prev) => Array.from(new Set([...prev, currentFriend.rewardLabel])));
+    setCelebrationText(`${currentFriend.name} is happy now. You found a ${currentFriend.rewardLabel}.`);
+  };
+
+  const handleCareTap = async () => {
+    if (celebrationText) return;
+
+    playSound('seedBounce');
+    const nextProgress = careProgress + 1;
+    setCareProgress(nextProgress);
+
+    if (nextProgress >= currentFriend.totalSteps) {
+      await completeFriendCare();
+    }
+  };
+
+  const handleNextFriend = () => {
+    playSound('click');
+    const nextIndex = (activeFriendIndex + 1) % villageFriends.length;
+    setActiveFriendIndex(nextIndex);
+    setCareProgress(0);
+    setCelebrationText(null);
+  };
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <div className="bg-white/90 rounded-2xl p-4 shadow-lg">
+        <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-rose-500">
+          Bug Village
+        </p>
+        <h3 className="text-lg sm:text-xl font-bold text-gray-800 mt-1">
+          Tap, help, smile, repeat
+        </h3>
+        <p className="text-sm text-gray-600 mt-1">
+          One tiny bug friend is ready to play right now.
+        </p>
+
+        <div className="grid grid-cols-3 gap-2 mt-4 text-[10px] sm:text-xs">
+          <div className="rounded-2xl bg-rose-50 px-3 py-3">
+            <p className="font-semibold text-rose-700">{villageFriends.length} bug homes</p>
+          </div>
+          <div className="rounded-2xl bg-amber-50 px-3 py-3">
+            <p className="font-semibold text-amber-700">{bugFriendCount} bug finds</p>
+          </div>
+          <div className="rounded-2xl bg-emerald-50 px-3 py-3">
+            <p className="font-semibold text-emerald-700">{unlockedRewards.length} cozy gifts</p>
+          </div>
+        </div>
+      </div>
+
+      <div className={`rounded-3xl bg-gradient-to-b ${currentFriend.bgClass} p-4 sm:p-5 shadow-xl`}>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">
+              {currentFriend.home}
+            </p>
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mt-1">{currentFriend.name}</h3>
+            <p className="text-base sm:text-lg text-gray-700 mt-2">{currentFriend.need}</p>
+            <p className="text-sm text-gray-500 mt-1">{currentFriend.helperText}</p>
+          </div>
+          <div className="text-4xl sm:text-5xl">{currentFriend.homeEmoji}</div>
+        </div>
+
+        <div className="mt-4 rounded-3xl bg-white/70 p-4 shadow-sm">
+          <div className="flex items-center justify-center gap-6">
+            <div className="text-7xl sm:text-8xl drop-shadow-sm">{currentFriend.friendEmoji}</div>
+            <div className="flex flex-col gap-2">
+              {completedSteps.map((isDone, index) => (
+                <button
+                  key={`${currentFriend.id}-${index}`}
+                  onClick={() => {
+                    void handleCareTap();
+                  }}
+                  disabled={isDone || Boolean(celebrationText)}
+                  className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full shadow-md text-2xl sm:text-3xl transition-transform active:scale-95 ${
+                    isDone ? 'bg-yellow-100' : 'bg-white hover:bg-sky-50'
+                  }`}
+                >
+                  {isDone ? currentFriend.doneEmoji : currentFriend.objectEmoji}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-4 flex items-center justify-center gap-2">
+            {completedSteps.map((isDone, index) => (
+              <div
+                key={`dot-${currentFriend.id}-${index}`}
+                className={`h-2.5 w-8 rounded-full ${isDone ? 'bg-emerald-400' : 'bg-white/80'}`}
+              />
+            ))}
+          </div>
+
+          {celebrationText ? (
+            <div className="mt-4 rounded-2xl bg-white px-4 py-4 text-center shadow-sm">
+              <p className="text-lg font-bold text-emerald-700">Hooray!</p>
+              <p className="text-sm text-gray-600 mt-1">{celebrationText}</p>
+              <button
+                onClick={handleNextFriend}
+                className="mt-4 w-full rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 px-4 py-3 text-sm font-semibold text-white shadow"
+              >
+                Meet the next bug
+              </button>
+            </div>
+          ) : (
+            <p className="mt-4 text-center text-sm font-semibold text-gray-600">
+              Tap the big {currentFriend.objectEmoji} buttons to help {currentFriend.name.split(' ')[0]}.
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="bg-white/90 rounded-2xl p-4 shadow-lg">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div>
+            <h3 className="font-bold text-gray-800 text-sm sm:text-base">Pick a bug friend</h3>
+            <p className="text-gray-500 text-xs sm:text-sm">Every friend has one simple thing to do.</p>
+          </div>
+          <span className="px-3 py-1 rounded-full bg-sky-100 text-sky-700 text-[10px] sm:text-xs font-semibold">
+            Instant play
+          </span>
+        </div>
+
+        <div className="grid grid-cols-4 gap-2">
+          {villageFriends.map((friend, index) => (
+            <button
+              key={friend.id}
+              onClick={() => switchFriend(index)}
+              className={`rounded-2xl px-2 py-3 text-center transition-transform active:scale-95 ${
+                index === activeFriendIndex ? 'bg-emerald-100 ring-2 ring-emerald-400' : 'bg-gray-50 hover:bg-gray-100'
+              }`}
+            >
+              <div className="text-3xl sm:text-4xl">{friend.friendEmoji}</div>
+              <p className="mt-1 text-[11px] sm:text-xs font-semibold text-gray-700">{friend.name.split(' ')[0]}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-white/90 rounded-2xl p-4 shadow-lg">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div>
+            <h3 className="font-bold text-gray-800 text-sm sm:text-base">Village shelf</h3>
+            <p className="text-gray-500 text-xs sm:text-sm">Tiny cozy rewards show up here as you help.</p>
+          </div>
+          <span className="px-3 py-1 rounded-full bg-rose-100 text-rose-700 text-[10px] sm:text-xs font-semibold">
+            {savedBugs.length} studio bugs
+          </span>
+        </div>
+
+        {unlockedRewards.length === 0 ? (
+          <p className="text-sm text-gray-500">Help one bug friend and a cozy village gift will appear here.</p>
+        ) : (
+          <div className="grid grid-cols-2 gap-2">
+            {unlockedRewards.map((reward) => (
+              <div key={reward} className="rounded-2xl bg-emerald-50 px-3 py-3">
+                <p className="text-sm font-semibold text-emerald-700">{reward}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-3 rounded-2xl bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-700">
+          {placedItems.length} decorated corners are still waiting in your wider garden world.
+        </div>
+      </div>
     </div>
   );
 };
