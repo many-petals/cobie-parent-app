@@ -3,6 +3,7 @@ import HomeScreen from './HomeScreen';
 import PetalPath from './PetalPath';
 import ProgressGarden from './ProgressGarden';
 import ParentMode from './ParentMode';
+import { ParentModeTab } from './ParentMode';
 import WelcomeScreen from './WelcomeScreen';
 import AuthModal from './AuthModal';
 import ParentPinModal from './ParentPinModal';
@@ -27,7 +28,7 @@ import { usePremium } from '@/contexts/PremiumContext';
 
 import {
   Family,
-  loginFamily,
+  getOrCreateFamilyForUser,
   getPetals,
   addPetal,
   getSessionHistory,
@@ -51,6 +52,7 @@ import {
   bulkDeleteWorries,
   syncWorriesToCloud,
 } from '@/lib/familyService';
+import { supabase } from '@/lib/supabase';
 
 import {
   GameProgressData,
@@ -68,6 +70,7 @@ import {
   setupSyncListeners,
   getLocalProgress,
 } from '@/lib/gameProgressService';
+import { hasExternalParentApp, openParentApp, ParentAppSection } from '@/lib/parentApp';
 
 
 
@@ -174,7 +177,8 @@ const AppLayout: React.FC = () => {
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinModalMode, setPinModalMode] = useState<'verify' | 'set' | 'change'>('verify');
   const [hasFamilyPin, setHasFamilyPin] = useState(false);
-  const [pendingParentAccess, setPendingParentAccess] = useState(false);
+  const [pendingParentAccess, setPendingParentAccess] = useState<ParentAppSection | null>(null);
+  const [parentModeInitialTab, setParentModeInitialTab] = useState<ParentModeTab>('overview');
   const [isLoading, setIsLoading] = useState(true);
 
   // Premium state
@@ -189,6 +193,7 @@ const AppLayout: React.FC = () => {
       createdAt: w.created_at,
       putAway: w.put_away,
       category: w.category,
+      intensity: w.intensity,
       reviewedWithParent: w.reviewed_with_parent,
       parentNotes: w.parent_notes,
     }));
@@ -215,11 +220,10 @@ const AppLayout: React.FC = () => {
     const loadData = async () => {
       setIsLoading(true);
 
-      const savedFamilyId = localStorage.getItem('petalPaths_familyId');
-      const savedFamilyEmail = localStorage.getItem('petalPaths_familyEmail');
+      const { data: { session } } = await supabase.auth.getSession();
 
-      if (savedFamilyId && savedFamilyEmail) {
-        const familyData = await loginFamily(savedFamilyEmail);
+      if (session?.user.email) {
+        const familyData = await getOrCreateFamilyForUser(session.user.id, session.user.email);
         if (familyData) {
           setFamily(familyData);
           
@@ -343,6 +347,14 @@ const AppLayout: React.FC = () => {
     };
 
     loadData();
+  }, []);
+
+  // A magic-link return can establish a session after the app has mounted.
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN') window.location.reload();
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
 
@@ -523,8 +535,8 @@ const AppLayout: React.FC = () => {
     setShowAuthModal(false);
   };
 
-  const handleLogout = () => {
-    setFamily(null);
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     localStorage.removeItem('petalPaths_familyId');
     localStorage.removeItem('petalPaths_familyEmail');
     setHasFamilyPin(false);
@@ -606,14 +618,39 @@ const AppLayout: React.FC = () => {
     }
   };
 
-  const handleOpenParentMode = async () => {
+  const externalParentAppEnabled = hasExternalParentApp();
+
+  const openParentDestination = (section: ParentAppSection, fallbackTab: ParentModeTab) => {
+    setParentModeInitialTab(fallbackTab);
+
+    const openedExternal = openParentApp({
+      section,
+      familyId: family?.id || null,
+      childName: family?.child_name || null,
+    });
+
+    if (!openedExternal) {
+      setCurrentView('parent');
+    }
+  };
+
+  const requestParentAccess = (section: ParentAppSection, fallbackTab: ParentModeTab) => {
     if (family && hasFamilyPin) {
-      setPendingParentAccess(true);
+      setPendingParentAccess(section);
+      setParentModeInitialTab(fallbackTab);
       setPinModalMode('verify');
       setShowPinModal(true);
     } else {
-      setCurrentView('parent');
+      openParentDestination(section, fallbackTab);
     }
+  };
+
+  const handleOpenParentMode = async () => {
+    requestParentAccess('home', 'overview');
+  };
+
+  const handleOpenParentTracker = async () => {
+    requestParentAccess('tracker', 'insights');
   };
 
   const handlePinVerify = async (pin: string): Promise<boolean> => {
@@ -630,8 +667,10 @@ const AppLayout: React.FC = () => {
     setShowPinModal(false);
     
     if (pendingParentAccess) {
-      setPendingParentAccess(false);
-      setCurrentView('parent');
+      const section = pendingParentAccess;
+      const fallbackTab = section === 'tracker' ? 'insights' : 'overview';
+      setPendingParentAccess(null);
+      openParentDestination(section, fallbackTab);
     }
   };
 
@@ -698,13 +737,14 @@ const AppLayout: React.FC = () => {
   };
 
   // Worry Pocket handlers with cloud sync
-  const handleAddWorry = async (worry: Omit<Worry, 'id'>) => {
+  const handleAddWorry = async (worry: Omit<Worry, 'id'>): Promise<Worry | null> => {
     if (family) {
       // Save to cloud first
       const cloudWorry = await addWorryToCloud(family.id, {
         type: worry.type,
         content: worry.content,
         category: worry.category,
+        intensity: worry.intensity,
         put_away: worry.putAway,
         reviewed_with_parent: worry.reviewedWithParent,
         parent_notes: worry.parentNotes,
@@ -719,11 +759,14 @@ const AppLayout: React.FC = () => {
           createdAt: cloudWorry.created_at,
           putAway: cloudWorry.put_away,
           category: cloudWorry.category,
+          intensity: cloudWorry.intensity,
           reviewedWithParent: cloudWorry.reviewed_with_parent,
           parentNotes: cloudWorry.parent_notes,
         };
         setWorries(prev => [...prev, newWorry]);
+        return newWorry;
       }
+      return null;
     } else {
       // Local only - generate local ID
       const newWorry: Worry = {
@@ -731,6 +774,7 @@ const AppLayout: React.FC = () => {
         id: `worry_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       };
       setWorries(prev => [...prev, newWorry]);
+      return newWorry;
     }
   };
 
@@ -964,6 +1008,7 @@ const AppLayout: React.FC = () => {
         onSelectMood={handleSelectMood}
         onOpenGarden={() => setCurrentView('garden')}
         onOpenParentMode={handleOpenParentMode}
+        onOpenParentTracker={handleOpenParentTracker}
         onOpenJournal={() => setCurrentView('journal')}
         onOpenQuietCorner={() => setCurrentView('quietcorner')}
         onOpenWorryPocket={() => setCurrentView('worrypocket')}
@@ -1002,6 +1047,7 @@ const AppLayout: React.FC = () => {
         <ParentMode
           onClose={() => setCurrentView('home')}
           sessionHistory={sessionHistory}
+          journalEntries={journalEntries}
           settings={settings}
           onSettingsChange={handleSettingsChange}
           soundSettings={soundSettings}
@@ -1017,12 +1063,18 @@ const AppLayout: React.FC = () => {
             setShowPinModal(true);
           }}
           hasPin={hasFamilyPin}
+          initialTab={parentModeInitialTab}
+          hasExternalParentApp={externalParentAppEnabled}
+          onOpenExternalParentApp={(section) =>
+            requestParentAccess(section, section === 'tracker' ? 'insights' : 'overview')
+          }
           childName={family?.child_name}
           onUpdateChildName={handleUpdateChildName}
           worries={worries}
           onUpdateWorry={handleUpdateWorry}
           onDeleteWorry={handleDeleteWorry}
           onBulkDeleteWorries={handleBulkDeleteWorries}
+          onOpenJournal={() => setCurrentView('journal')}
         />
       )}
 
@@ -1042,7 +1094,6 @@ const AppLayout: React.FC = () => {
       {showAuthModal && (
         <AuthModal
           onClose={() => setShowAuthModal(false)}
-          onSuccess={handleAuthSuccess}
         />
       )}
 
@@ -1051,7 +1102,7 @@ const AppLayout: React.FC = () => {
           mode={pinModalMode}
           onClose={() => {
             setShowPinModal(false);
-            setPendingParentAccess(false);
+            setPendingParentAccess(null);
           }}
           onSuccess={handlePinSuccess}
           onVerify={handlePinVerify}

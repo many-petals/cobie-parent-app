@@ -2,9 +2,9 @@ import { supabase } from './supabase';
 
 export interface Family {
   id: string;
+  user_id: string;
   email: string;
   child_name: string | null;
-  parent_pin: string | null;
   created_at: string;
 }
 
@@ -40,12 +40,12 @@ export interface FamilySettings {
 
 
 
-// Family authentication
-export async function loginFamily(email: string): Promise<Family | null> {
+// Family profiles are always owned by a verified Supabase Auth user.
+export async function getFamilyForUser(userId: string): Promise<Family | null> {
   const { data, error } = await supabase
     .from('families')
     .select('*')
-    .eq('email', email.toLowerCase())
+    .eq('user_id', userId)
     .single();
 
   if (error || !data) {
@@ -54,10 +54,18 @@ export async function loginFamily(email: string): Promise<Family | null> {
   return data;
 }
 
-export async function registerFamily(email: string, childName?: string): Promise<Family | null> {
+export async function getOrCreateFamilyForUser(
+  userId: string,
+  email: string,
+  childName?: string,
+): Promise<Family | null> {
+  const existing = await getFamilyForUser(userId);
+  if (existing) return existing;
+
   const { data, error } = await supabase
     .from('families')
-    .insert([{ 
+    .insert([{
+      user_id: userId,
       email: email.toLowerCase(), 
       child_name: childName || null 
     }])
@@ -82,34 +90,18 @@ export async function updateChildName(familyId: string, childName: string): Prom
 
 // Parent PIN management
 export async function setParentPin(familyId: string, pin: string): Promise<boolean> {
-  const { error } = await supabase
-    .from('families')
-    .update({ parent_pin: pin, updated_at: new Date().toISOString() })
-    .eq('id', familyId);
-
+  const { error } = await supabase.rpc('set_family_parent_pin', { pin });
   return !error;
 }
 
 export async function verifyParentPin(familyId: string, pin: string): Promise<boolean> {
-  const { data, error } = await supabase
-    .from('families')
-    .select('parent_pin')
-    .eq('id', familyId)
-    .single();
-
-  if (error || !data) return false;
-  return data.parent_pin === pin;
+  const { data, error } = await supabase.rpc('verify_family_parent_pin', { pin });
+  return !error && data === true;
 }
 
 export async function hasParentPin(familyId: string): Promise<boolean> {
-  const { data, error } = await supabase
-    .from('families')
-    .select('parent_pin')
-    .eq('id', familyId)
-    .single();
-
-  if (error || !data) return false;
-  return data.parent_pin !== null && data.parent_pin !== '';
+  const { data, error } = await supabase.rpc('has_family_parent_pin');
+  return !error && data === true;
 }
 
 // Petals management
