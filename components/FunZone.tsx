@@ -126,7 +126,7 @@ const rescueScenarios: RescueScenario[] = [
     accent: 'from-sky-300 via-cyan-300 to-blue-300',
     successMessage: 'The snail reached home and gave a twinkly shell wiggle.',
     details: {
-      checkpoints: ['1', '2', '3'],
+      checkpoints: ['🌱', '✨', '🌼', '🌈', '🏡', '⭐'],
     },
   },
 ];
@@ -584,6 +584,7 @@ const TinyBugRescue: React.FC<{
   const [activeScenarioId, setActiveScenarioId] = useState<string | null>(null);
   const [tapProgress, setTapProgress] = useState(0);
   const [trailProgress, setTrailProgress] = useState(0);
+  const [trailMisses, setTrailMisses] = useState(0);
   const [completedScenarios, setCompletedScenarios] = useState<string[]>([]);
   const [rescueMessage, setRescueMessage] = useState<string | null>(null);
   const [choiceFeedback, setChoiceFeedback] = useState<string | null>(null);
@@ -616,6 +617,7 @@ const TinyBugRescue: React.FC<{
   const resetScenarioState = () => {
     setTapProgress(0);
     setTrailProgress(0);
+    setTrailMisses(0);
     setChoiceFeedback(null);
   };
 
@@ -665,7 +667,10 @@ const TinyBugRescue: React.FC<{
   const handleTrailTap = async (checkpointIndex: number) => {
     if (!activeScenario?.details.checkpoints) return;
     if (checkpointIndex !== trailProgress) {
-      setChoiceFeedback('Start at the first sparkle, then follow the trail.');
+      playSound('click');
+      setTrailMisses((prev) => prev + 1);
+      const nextCheckpoint = activeScenario.details.checkpoints[trailProgress];
+      setChoiceFeedback(`Almost! Look for ${nextCheckpoint} next.`);
       return;
     }
 
@@ -846,11 +851,12 @@ const TinyBugRescue: React.FC<{
                         onClick={() => {
                           void handleTrailTap(index);
                         }}
-                        className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full text-xl sm:text-2xl shadow-lg transition-transform active:scale-95 ${
+                        aria-label={`${isDone ? 'Finished' : isNext ? 'Next' : 'Later'} trail stop ${index + 1}: ${checkpoint}`}
+                        className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full text-2xl sm:text-3xl shadow-lg transition-transform active:scale-95 ${
                           isDone
                             ? 'bg-yellow-200 text-yellow-700'
                             : isNext
-                              ? 'bg-sky-200 text-sky-700 ring-2 ring-sky-400'
+                              ? 'bg-sky-200 text-sky-700 ring-2 ring-sky-400 animate-pulse'
                               : 'bg-white text-gray-400'
                         }`}
                       >
@@ -864,8 +870,15 @@ const TinyBugRescue: React.FC<{
                 })}
               </div>
               <p className="mt-4 text-center text-sm font-semibold text-gray-600">
-                Start at 1, then follow the sparkles all the way home.
+                {trailProgress >= activeScenario.details.checkpoints.length
+                  ? 'You made a twinkly path all the way home!'
+                  : `Find the glowing stop ${trailProgress + 1} of ${activeScenario.details.checkpoints.length}.`}
               </p>
+              {trailMisses > 0 && (
+                <p className="mt-2 text-center text-xs font-semibold text-sky-600">
+                  The snail is wiggling a tiny hint your way.
+                </p>
+              )}
             </div>
           )}
 
@@ -971,6 +984,8 @@ const BugVillage: React.FC<{
       helperText: 'Tap the raindrops away.',
       objectEmoji: '💧',
       doneEmoji: '✨',
+      stepEmojis: ['💧', '☀️', '✨', '🪽', '🌼'],
+      stepLabels: ['Tap a raindrop', 'Warm a wing', 'Add a sparkle', 'Flap together', 'Fly to the flowers'],
       friendEmoji: '🐞',
       homeEmoji: '🍄',
       rewardItemId: 'ladybug',
@@ -986,6 +1001,8 @@ const BugVillage: React.FC<{
       helperText: 'Tap the flower drops.',
       objectEmoji: '🌼',
       doneEmoji: '🍯',
+      stepEmojis: ['🌼', '💛', '🍯', '🐝'],
+      stepLabels: ['Find a flower', 'Tap a sunny petal', 'Add a nectar drop', 'Buzz together'],
       friendEmoji: '🐝',
       homeEmoji: '🌻',
       rewardItemId: 'bee',
@@ -1001,6 +1018,8 @@ const BugVillage: React.FC<{
       helperText: 'Tap the sleepy pillows.',
       objectEmoji: '🛏️',
       doneEmoji: '🌙',
+      stepEmojis: ['🛏️', '🍃', '🌙'],
+      stepLabels: ['Choose a bed', 'Tuck in a leaf', 'Say goodnight'],
       friendEmoji: '🐛',
       homeEmoji: '🍃',
       rewardItemId: 'clover',
@@ -1016,6 +1035,8 @@ const BugVillage: React.FC<{
       helperText: 'Tap the sparkle dots.',
       objectEmoji: '⭐',
       doneEmoji: '🏡',
+      stepEmojis: ['⭐', '✨', '🌈', '🏡'],
+      stepLabels: ['Spot a sparkle', 'Make it glow', 'Follow the rainbow', 'Arrive home'],
       friendEmoji: '🐌',
       homeEmoji: '🌈',
       rewardItemId: 'snail',
@@ -1033,6 +1054,7 @@ const BugVillage: React.FC<{
   const uniqueEarned = [...new Set(earnedItems)];
   const currentFriend = villageFriends[activeFriendIndex];
   const completedSteps = Array.from({ length: currentFriend.totalSteps }, (_, index) => index < careProgress);
+  const currentStepLabel = currentFriend.stepLabels[careProgress] || 'Your friend is cheering!';
   const bugFriendCount = uniqueEarned.filter((itemId) => {
     const item = gardenItems.find((gardenItem) => gardenItem.id === itemId);
     return item?.category === 'creatures' || item?.id === 'clover';
@@ -1106,7 +1128,7 @@ const BugVillage: React.FC<{
             </p>
             <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mt-1">{currentFriend.name}</h3>
             <p className="text-base sm:text-lg text-gray-700 mt-2">{currentFriend.need}</p>
-            <p className="text-sm text-gray-500 mt-1">{currentFriend.helperText}</p>
+            <p className="text-sm text-gray-500 mt-1">{currentStepLabel}. {currentFriend.helperText}</p>
           </div>
           <div className="text-4xl sm:text-5xl">{currentFriend.homeEmoji}</div>
         </div>
@@ -1126,7 +1148,7 @@ const BugVillage: React.FC<{
                     isDone ? 'bg-yellow-100' : 'bg-white hover:bg-sky-50'
                   }`}
                 >
-                  {isDone ? currentFriend.doneEmoji : currentFriend.objectEmoji}
+                  {isDone ? currentFriend.doneEmoji : currentFriend.stepEmojis[index]}
                 </button>
               ))}
             </div>
@@ -1154,7 +1176,7 @@ const BugVillage: React.FC<{
             </div>
           ) : (
             <p className="mt-4 text-center text-sm font-semibold text-gray-600">
-              Tap the big {currentFriend.objectEmoji} buttons to help {currentFriend.name.split(' ')[0]}.
+              Tap the next big button to help {currentFriend.name.split(' ')[0]}. Each tap changes the story.
             </p>
           )}
         </div>
@@ -2035,7 +2057,8 @@ const PetalKitchenGame: React.FC<{ onComplete: (score: number, difficulty: strin
     playSound('click');
     setSelectedIngredientIds(shuffled);
     setStirCount(0);
-    setCelebrationText('Your bowl got a silly surprise mix.');
+    // A surprise mix should keep the child in the play loop, not finish or lock the bowl.
+    setCelebrationText(null);
   };
 
   const stirBowl = () => {
