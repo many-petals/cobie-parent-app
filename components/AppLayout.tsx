@@ -420,6 +420,34 @@ const AppLayout: React.FC = () => {
     localStorage.setItem('petalPaths_weeklyGoals', JSON.stringify(weeklyGoals));
   }, [weeklyGoals]);
 
+  const handleAddGoal = (goal: Omit<WeeklyGoal, 'id' | 'createdAt' | 'weekStartDate' | 'completed' | 'celebratedAt'>) => {
+    const now = new Date().toISOString();
+    setWeeklyGoals((previousGoals) => [
+      ...previousGoals,
+      {
+        ...goal,
+        id: `goal_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        createdAt: now,
+        weekStartDate: getWeekStart(new Date()),
+        completed: false,
+      },
+    ]);
+  };
+
+  const handleUpdateGoal = (id: string, updates: Partial<WeeklyGoal>) => {
+    setWeeklyGoals((previousGoals) =>
+      previousGoals.map((goal) => (goal.id === id ? { ...goal, ...updates } : goal)),
+    );
+  };
+
+  const handleDeleteGoal = (id: string) => {
+    setWeeklyGoals((previousGoals) => previousGoals.filter((goal) => goal.id !== id));
+  };
+
+  const handleCelebrateGoal = (id: string) => {
+    handleUpdateGoal(id, { celebratedAt: new Date().toISOString() });
+  };
+
   // Apply high contrast mode
   useEffect(() => {
     if (settings.highContrast) {
@@ -1074,6 +1102,11 @@ const AppLayout: React.FC = () => {
           onUpdateWorry={handleUpdateWorry}
           onDeleteWorry={handleDeleteWorry}
           onBulkDeleteWorries={handleBulkDeleteWorries}
+          goals={weeklyGoals}
+          onAddGoal={handleAddGoal}
+          onUpdateGoal={handleUpdateGoal}
+          onDeleteGoal={handleDeleteGoal}
+          onCelebrateGoal={handleCelebrateGoal}
           onOpenJournal={() => setCurrentView('journal')}
         />
       )}
