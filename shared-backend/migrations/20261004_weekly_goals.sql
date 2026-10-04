@@ -24,8 +24,19 @@ alter table public.weekly_goals enable row level security;
 
 grant select, insert, update, delete on table public.weekly_goals to authenticated;
 
-drop policy if exists family_owner_access on public.weekly_goals;
-create policy family_owner_access on public.weekly_goals
-  for all to authenticated
-  using (family_id = public.current_family_id())
-  with check (family_id = public.current_family_id());
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_policies
+    where schemaname = 'public'
+      and tablename = 'weekly_goals'
+      and policyname = 'family_owner_access'
+  ) then
+    create policy family_owner_access on public.weekly_goals
+      for all to authenticated
+      using (family_id = public.current_family_id())
+      with check (family_id = public.current_family_id());
+  end if;
+end;
+$$;
