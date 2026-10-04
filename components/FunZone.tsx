@@ -35,7 +35,7 @@ interface FunZoneProps {
   familyId: string | null;
 }
 
-type GameScreen = 'home' | 'garden' | 'hide-seek' | 'seed-sort' | 'memory-match' | 'bug-builder' | 'ladybird-launch';
+type GameScreen = 'home' | 'garden' | 'rescue' | 'hide-seek' | 'seed-sort' | 'memory-match' | 'bug-builder' | 'ladybird-launch';
 
 type RescueScenario = {
   id: string;
@@ -254,6 +254,22 @@ const FunZone: React.FC<FunZoneProps> = ({
         
         {currentScreen === 'garden' && (
           <BugVillage
+            earnedItems={earnedGardenItems}
+            placedItems={placedGardenItems}
+            gardenPatches={gardenPatches}
+            savedBugs={savedBugs}
+            onPlaceItem={onPlaceGardenItem}
+            onRemoveItem={onRemoveGardenItem}
+            onUpdateGardenPatches={onUpdateGardenPatches}
+            onHarvestItem={async (itemId) => {
+              await onEarnReward(0, [itemId]);
+            }}
+            playSound={playSound}
+          />
+        )}
+
+        {currentScreen === 'rescue' && (
+          <TinyBugRescue
             earnedItems={earnedGardenItems}
             placedItems={placedGardenItems}
             gardenPatches={gardenPatches}
@@ -545,6 +561,30 @@ const FunZoneHome: React.FC<{
             </button>
           ))}
         </div>
+      </section>
+
+      <section className="rounded-3xl bg-gradient-to-r from-sky-400 via-cyan-300 to-emerald-300 p-4 sm:p-5 text-white shadow-xl">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-white/75 text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em]">
+              Tiny Bug Rescue
+            </p>
+            <h2 className="mt-1 text-xl sm:text-2xl font-black">Help a tiny friend</h2>
+            <p className="mt-1 text-sm text-white/90">
+              Tap, choose, and follow a glowing trail to make a bug feel safe.
+            </p>
+          </div>
+          <span className="text-5xl" aria-hidden="true">🐌</span>
+        </div>
+        <button
+          onClick={() => {
+            playSound('click');
+            onSelectGame('rescue');
+          }}
+          className="mt-4 w-full rounded-2xl bg-white px-4 py-3 text-sm font-bold text-sky-700 shadow-lg active:scale-95 transition-transform"
+        >
+          Open rescue garden
+        </button>
       </section>
 
       <section className="rounded-2xl sm:rounded-3xl bg-white/15 backdrop-blur-sm p-4 sm:p-5 text-white shadow-lg">
