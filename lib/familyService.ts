@@ -38,6 +38,76 @@ export interface FamilySettings {
   sound_character_defaults?: Record<string, string>;
 }
 
+export interface WeeklyGoalRecord {
+  id: string;
+  title: string;
+  description: string;
+  targetCount: number;
+  currentProgress: number;
+  type: 'worry_review' | 'breathing' | 'journal' | 'quiet_time' | 'custom';
+  createdAt: string;
+  weekStartDate: string;
+  completed: boolean;
+  celebratedAt?: string;
+}
+
+export async function getWeeklyGoals(familyId: string): Promise<WeeklyGoalRecord[]> {
+  const { data, error } = await supabase
+    .from('weekly_goals')
+    .select('*')
+    .eq('family_id', familyId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching weekly goals:', error);
+    return [];
+  }
+
+  return (data || []).map((goal) => ({
+    id: goal.client_id,
+    title: goal.title,
+    description: goal.description,
+    targetCount: goal.target_count,
+    currentProgress: goal.current_progress,
+    type: goal.goal_type,
+    createdAt: goal.created_at,
+    weekStartDate: goal.week_start_date,
+    completed: goal.completed,
+    celebratedAt: goal.celebrated_at || undefined,
+  }));
+}
+
+export async function syncWeeklyGoalsToCloud(
+  familyId: string,
+  goals: WeeklyGoalRecord[],
+): Promise<boolean> {
+  if (goals.length === 0) return true;
+
+  const { error } = await supabase.from('weekly_goals').upsert(
+    goals.map((goal) => ({
+      family_id: familyId,
+      client_id: goal.id,
+      title: goal.title,
+      description: goal.description,
+      target_count: goal.targetCount,
+      current_progress: goal.currentProgress,
+      goal_type: goal.type,
+      week_start_date: goal.weekStartDate,
+      completed: goal.completed,
+      celebrated_at: goal.celebratedAt || null,
+      created_at: goal.createdAt,
+      updated_at: new Date().toISOString(),
+    })),
+    { onConflict: 'family_id,client_id' },
+  );
+
+  if (error) {
+    console.error('Error syncing weekly goals:', error);
+    return false;
+  }
+  return true;
+}
+
 
 
 // Family profiles are always owned by a verified Supabase Auth user.

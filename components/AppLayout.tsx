@@ -51,6 +51,8 @@ import {
   deleteWorry as deleteWorryFromCloud,
   bulkDeleteWorries,
   syncWorriesToCloud,
+  getWeeklyGoals,
+  syncWeeklyGoalsToCloud,
 } from '@/lib/familyService';
 import { supabase } from '@/lib/supabase';
 
@@ -420,6 +422,11 @@ const AppLayout: React.FC = () => {
     localStorage.setItem('petalPaths_weeklyGoals', JSON.stringify(weeklyGoals));
   }, [weeklyGoals]);
 
+  useEffect(() => {
+    if (!family || weeklyGoals.length === 0) return;
+    void syncWeeklyGoalsToCloud(family.id, weeklyGoals);
+  }, [family, weeklyGoals]);
+
   const handleAddGoal = (goal: Omit<WeeklyGoal, 'id' | 'createdAt' | 'weekStartDate' | 'completed' | 'celebratedAt'>) => {
     const now = new Date().toISOString();
     setWeeklyGoals((previousGoals) => [
@@ -468,6 +475,7 @@ const AppLayout: React.FC = () => {
     const localHistory = localStorage.getItem('petalPaths_history');
     const localBadges = localStorage.getItem('petalPaths_badges');
     const localWorries = localStorage.getItem('petalPaths_worries');
+    const localGoals = localStorage.getItem('petalPaths_weeklyGoals');
 
     if (localPetals || localHistory) {
       const petalsToSync = localPetals ? JSON.parse(localPetals) : [];
@@ -501,6 +509,13 @@ const AppLayout: React.FC = () => {
       }
     }
 
+    if (localGoals) {
+      const goalsToSync = JSON.parse(localGoals);
+      if (goalsToSync.length > 0) {
+        await syncWeeklyGoalsToCloud(familyData.id, goalsToSync);
+      }
+    }
+
     const cloudPetals = await getPetals(familyData.id);
     const cloudSessions = await getSessionHistory(familyData.id);
     const cloudSettings = await getSettings(familyData.id);
@@ -508,6 +523,7 @@ const AppLayout: React.FC = () => {
     const cloudJournal = await getJournalEntries(familyData.id);
     const cloudBadges = await getBadges(familyData.id);
     const cloudWorries = await getWorries(familyData.id);
+    const cloudGoals = await getWeeklyGoals(familyData.id);
 
     setPetals(cloudPetals.map(p => ({
       mood: p.mood,
@@ -558,6 +574,7 @@ const AppLayout: React.FC = () => {
 
     // Load cloud worries after sync
     setWorries(cloudWorriesToLocal(cloudWorries));
+    setWeeklyGoals(cloudGoals);
 
     setHasFamilyPin(hasPin);
     setShowAuthModal(false);
